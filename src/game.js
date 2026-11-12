@@ -51,7 +51,8 @@
     { body: '#2b2f38', body2: '#3d434f', accent: '#f04f28', rack: '#22252c', stripe: '#f04f28', jersey: '#3d434f', jersey2: '#f04f28', pants: '#1a1d23', helmet: '#121316', helmet2: '#f04f28', snorkel: '#22252c' }
   ];
   const NAMES = ['Болотный', 'Дизель', 'Профессор', 'Барс', 'Механик', 'Шторм', 'Тапок', 'Кувалда', 'Вихрь', 'Гряземес', 'Сапёр', 'Боцман'];
-  const DIFF = { easy: [0.10, 0.40], normal: [0.36, 0.72], hard: [0.66, 1.0] };
+  const DIFF = { easy: [0.10, 0.40], normal: [0.36, 0.72], hard: [0.66, 1.0], extreme: [0.66, 1.0] };
+  const isExtreme = () => G.diff === 'extreme';
 
   const G = {
     screen: 'menu', riders: [], track: null, rnd: null, seed: 1,
@@ -68,7 +69,7 @@
   const fmt = (t) => (t === null || t === undefined || !isFinite(t) ? '—' : t.toFixed(2));
   const escHtml = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const escAttr = escHtml;
-  const DIFFNAME = { easy: 'Новички', normal: 'Любители', hard: 'Профи' };
+  const DIFFNAME = { easy: 'Новички', normal: 'Любители', hard: 'Профи', extreme: 'Экстрим' };
   function msg(text, col, big) {
     G.msgs.push({ text, col, big: big !== false, life: 1.5, max: 1.5 });
     if (G.msgs.length > 4) G.msgs.shift();
@@ -78,7 +79,7 @@
   // вкладки: «мои» (localStorage) и «все игроки» (сервер);
   // уровни: новички / любители / профи / абсолют (лучшее на любом уровне, с пометкой уровня)
   const REC = { tab: 'local', diff: null, req: 0 };
-  const LEVELS = [['easy', 'Новички'], ['normal', 'Любители'], ['hard', 'Профи'], ['all', 'Абсолют']];
+  const LEVELS = [['easy', 'Новички'], ['normal', 'Любители'], ['hard', 'Профи'], ['extreme', 'Экстрим'], ['all', 'Абсолют']];
   function recRows(list, freshTs, showLevel) {
     return list.map((r, i) => {
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
@@ -202,7 +203,7 @@
           <div class="seg" data-opt="n"><button data-v="8" class="on">8</button><button data-v="7">7 <i>кто-то без пары</i></button></div>
         </div>
         <div class="opt"><span>Соперники</span>
-          <div class="seg" data-opt="d"><button data-v="easy">Новички</button><button data-v="normal" class="on">Любители</button><button data-v="hard">Профи</button></div>
+          <div class="seg" data-opt="d"><button data-v="easy">Новички</button><button data-v="normal" class="on">Любители</button><button data-v="hard">Профи</button><button data-v="extreme">Экстрим</button></div>
         </div>
       </div>
       <div class="rowbtns">
@@ -212,6 +213,8 @@
       <div class="keys">Газ: <kbd>↑</kbd> <kbd>W</kbd> или <kbd>Space</kbd> (удерживай) · тап/палец по экрану на телефоне · <kbd>Enter</kbd> — далее</div>
     `);
     ov.querySelectorAll('.seg').forEach((seg) => {
+      const cur = seg.dataset.opt === 'n' ? String(G.nRiders) : G.diff;
+      seg.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.v === cur));
       seg.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
         seg.querySelectorAll('button').forEach((x) => x.classList.remove('on'));
         b.classList.add('on');
@@ -276,7 +279,9 @@
       <div class="sub small">Ты едешь по одному заезду в каждой серии; остальные пары едут параллельно — их времена засчитываются автоматически.</div>
       <button class="btn primary" id="btn-go">НА СТАРТ · серия 1</button>
     `);
-    document.getElementById('btn-go').addEventListener('click', () => playSeries(0));
+    document.getElementById('btn-go').addEventListener('click', () => {
+      if (isExtreme()) questionScreen(() => playSeries(0)); else playSeries(0);
+    });
   }
 
   /* ---------- серия: симулируем заезды без игрока, затем едем свой ---------- */
@@ -290,7 +295,7 @@
         const e = G.riders[id];
         if (e.isPlayer) return;
         const rnd = MR.rng(G.seed * 977 + s * 131 + i * 17 + l * 7);
-        const res = MR.simRun(G.track, l, e.skill, rnd);
+        const res = MR.simRun(G.track, l, e.skill, rnd, isExtreme());
         e.runs.push(res);
         e.total += res.total;
       });
@@ -312,9 +317,11 @@
       const id = heat.lanes[l];
       if (id === null || id === undefined) continue;
       const e = G.riders[id];
+      const r = MR.newRider();
+      r.extreme = isExtreme();
       G.lanes[l] = {
-        entry: e, r: MR.newRider(), look: e.look, name: e.name, player: !!e.isPlayer,
-        ai: e.isPlayer ? null : MR.makeAIRun(e.skill, G.heatRnd)
+        entry: e, r, look: e.look, name: e.name, player: !!e.isPlayer,
+        ai: e.isPlayer ? null : MR.makeAIRun(e.skill, G.heatRnd, r.extreme)
       };
       if (e.isPlayer) G.playerLane = l;
     }
@@ -336,7 +343,9 @@
         <h2>${escHtml(G.heroText.title)}</h2>
         <div class="sub">${G.heroText.sub}</div>
         ${rows}
-        <div class="sub small">В воде следи за зелёной зоной тахометра: перельёшь — гидроудар и потеря хода, недодашь — тонешь в колее.</div>
+        <div class="sub small">${isExtreme()
+          ? '<b>Экстрим:</b> заглох в воде — мотор сам не заведётся. Отпусти газ и нажми снова, иначе через ' + MR.C.DROWN + ' с утонешь (время заезда ' + MR.C.TLIMIT + ' с).'
+          : 'В воде следи за зелёной зоной тахометра: перельёшь — гидроудар и потеря хода, недодашь — тонешь в колее.'}</div>
         <button class="btn primary" id="btn-start">ГОТОВ</button>
         <div class="credit">фото: MUD RACING</div>
       </div>
@@ -377,8 +386,18 @@
           burst(l, r, 8, 'light');
         }
       } else if (ev.t === 'overheat') {
-        if (e.player) { msg('ЗАГЛОХ! −1.6 с', '#ff5a4a', false); RN.view.shake = 0.55; splat(); SFX.overheat(); }
+        if (e.player) {
+          msg(ev.dead ? 'ЗАГЛОХ! Отпусти газ и жми снова' : 'ЗАГЛОХ! −1.6 с', '#ff5a4a', false);
+          RN.view.shake = 0.55; splat(); SFX.overheat();
+        }
         burst(l, r, 10, 'dark');
+      } else if (ev.t === 'restart') {
+        if (e.player) msg('ЗАВЁЛСЯ!', '#7dffa8', false);
+      } else if (ev.t === 'drown') {
+        SFX.flood();
+        if (e.player) { msg('УТОНУЛ', '#ff5a4a', true); RN.view.shake = 0.8; splat(); }
+        else msg(e.name + ' утонул', '#ffd23e', false);
+        burst(l, r, 30, 'mud');
       } else if (ev.t === 'land') {
         burst(l, r, 8, 'light');
       }
@@ -404,6 +423,21 @@
     if (G.splats.length > 6) G.splats.shift();
   }
 
+  /* игрок утонул — соперник доезжает «за кадром» */
+  function finishOthers() {
+    const dt = MR.C.DT;
+    for (let l = 0; l < 2; l++) {
+      const e = G.lanes[l];
+      if (!e || e.player) continue;
+      let t = G.t;
+      while (!e.r.fin && !e.r.drowned && t < MR.C.TLIMIT) {
+        t += dt;
+        MR.stepRider(e.r, G.track, l, MR.aiGas(e.ai, e.r, G.track, t, dt, G.heatRnd), dt, t);
+        e.r.ev.length = 0;
+      }
+    }
+  }
+
   function endHeat() {
     if (G.ended) return;
     G.ended = true;
@@ -416,11 +450,11 @@
       const raw = e.r.fin ? e.r.time : C.TLIMIT;
       const pen = e.player ? G.pen : (e.ai.fs ? C.PENALTY : 0);
       const total = raw + pen;
-      e.entry.runs.push({ raw, pen, total, lane: l });
+      e.entry.runs.push({ raw, pen, total, lane: l, drowned: !!e.r.drowned });
       e.entry.total += total;
       tots.push(total);
       if (!best || total < best.total) best = { total, e };
-      rows.push({ e, raw, pen, total, lane: l, react: e.r.react });
+      rows.push({ e, raw, pen, total, lane: l, react: e.r.react, drowned: !!e.r.drowned });
     }
     let html = `<div class="kicker">${G.label} — финиш</div>`;
     for (const row of rows) {
@@ -428,7 +462,7 @@
       const w = best && Math.abs(row.total - best.total) < 1e-6;
       html += `<div class="res-row ${row.e.player ? 'me' : ''} ${w ? 'win' : ''}">
         <span class="ln">дорожка ${row.lane + 1}</span>
-        <b>${escHtml(row.e.name)}</b>
+        <b>${escHtml(row.e.name)}${row.drowned ? ' <i class="pen">утонул</i>' : ''}</b>
         <span class="rt">${fmt(row.raw)}${row.pen ? `<i class="pen">+${row.pen.toFixed(2)}</i>` : ''}</span>
         <span class="tot">${fmt(row.total)}</span>
         <span class="diff">${best && row.total > best.total + 0.001 ? '+' + (row.total - best.total).toFixed(2) : 'лучший'}</span>
@@ -441,6 +475,7 @@
       html += `<div class="sub small">Реакция: <b>${react}</b> · макс. <b>${(pr.r.top * 3.6).toFixed(0)} км/ч</b> · чистых входов в воду: <b>${clean}/3</b>${pr.r.heats ? ' · перегревов: <b>' + pr.r.heats + '</b>' : ''}</div>`;
     }
     const last = G.si === 3;
+    if (pr && pr.r.drowned) { drownScreen(html, last); return; }
     html += `<button class="btn primary" id="btn-next">${last ? 'ИТОГИ ЧЕМПИОНАТА' : 'ИТОГИ СЕРИИ'}</button>`;
     show(html);
     G.screen = 'heatResult';
@@ -448,6 +483,80 @@
       hide();
       if (G.si >= 3) { finalScreen(); return; }
       seriesScreen();
+    });
+  }
+
+  /* ---------- «Экстрим»: утонул ---------- */
+  function drownScreen(resHtml, last) {
+    show(`
+      <div class="hero-bg"></div>
+      <div class="hero-in">
+        <div class="hero-top"></div>
+        <div class="kicker">${escHtml(G.label)} · Экстрим</div>
+        <h2>Утонул</h2>
+        <div class="sub">Мотор заглох в воде и не завёлся за ${MR.C.DROWN} с — время заезда ${MR.C.TLIMIT.toFixed(2)} с.</div>
+        <div class="heat-res">${resHtml}</div>
+        <button class="btn primary" id="btn-next">${last ? 'ИТОГИ ЧЕМПИОНАТА' : 'СЛЕДУЮЩИЙ ЗАЕЗД'}</button>
+      </div>
+    `, 'hero fail');
+    G.screen = 'heatResult';
+    document.getElementById('btn-next').addEventListener('click', () => {
+      hide();
+      if (G.si >= 3) finalScreen(); else playSeries(G.si + 1);
+    });
+  }
+
+  /* ---------- «Экстрим»: вопрос по регламенту ---------- */
+  // вопросы — questions.json; в сборке встроены в <script id="mr-questions">
+  let QUESTIONS = null;
+  function loadQuestions() {
+    if (QUESTIONS) return Promise.resolve(QUESTIONS);
+    const el = document.getElementById('mr-questions');
+    const ok = (list) => Array.isArray(list) ? list.filter((q) => q && q.question && Array.isArray(q.answers) &&
+      q.answers.length >= 2 && Number.isInteger(q.correct) && q.correct >= 0 && q.correct < q.answers.length) : [];
+    try {
+      const txt = el ? el.textContent.trim() : '';
+      if (txt) return Promise.resolve(QUESTIONS = ok(JSON.parse(txt)));
+    } catch (e) { console.warn('questions: bad inline JSON', e); }
+    const src = el && el.dataset.src;
+    if (!src) return Promise.resolve(QUESTIONS = []);
+    return fetch(src).then((r) => r.json()).then((j) => (QUESTIONS = ok(j)))
+      .catch((e) => { console.warn('questions: load failed', e); return []; });
+  }
+  function questionScreen(onPass) {
+    G.screen = 'question';
+    loadQuestions().then((list) => {
+      if (G.screen !== 'question') return;
+      if (!list.length) { onPass(); return; }     // вопросов нет — пропускаем
+      const q = list[Math.floor(Math.random() * list.length)];
+      const order = MR.shuffle(q.answers.map((_, i) => i), Math.random);
+      show(`
+        <div class="hero-bg"></div>
+        <div class="hero-in">
+          <div class="hero-top"></div>
+          <div class="kicker">Экстрим · допуск к старту</div>
+          <h2>Вопрос по регламенту</h2>
+          <div class="sub q-text">${escHtml(q.question)}</div>
+          <div class="qa">${order.map((i) => `<button data-i="${i}">${escHtml(q.answers[i])}</button>`).join('')}</div>
+          <div class="sub small" id="q-res">Ответишь верно — допуск к старту. Ошибёшься — снова на главную.</div>
+        </div>
+      `, 'hero judge');
+      const btns = ov.querySelectorAll('.qa button');
+      btns.forEach((b) => b.addEventListener('click', () => {
+        if (G.screen !== 'question') return;
+        G.screen = 'questionDone';
+        const right = +b.dataset.i === q.correct;
+        btns.forEach((x) => { x.disabled = true; if (+x.dataset.i === q.correct) x.classList.add('ok'); });
+        const res = document.getElementById('q-res');
+        if (right) {
+          res.innerHTML = '<b style="color:#7dffa8">Верно! Допущен к старту.</b>';
+          setTimeout(() => { hide(); setTimeout(onPass, 150); }, 900);
+        } else {
+          b.classList.add('bad');
+          res.innerHTML = '<b style="color:#ff8a6a">Неверно — к старту не допущен.</b>';
+          setTimeout(() => { hide(); setTimeout(menu, 150); }, 2200);
+        }
+      }));
     });
   }
 
@@ -566,8 +675,9 @@
         }
       }
       if (G.lightA > 0) G.lightA = Math.max(0, G.lightA - dt * 0.7);
-      const allDone = G.lanes.every((e) => !e || e.r.fin || G.t > 60);
-      if (allDone) endHeat();
+      const pl = G.playerLane >= 0 ? G.lanes[G.playerLane] : null;
+      if (pl && pl.r.drowned) { if (pl.r.sinkT > 1.8) { finishOthers(); endHeat(); } }
+      else if (G.lanes.every((e) => !e || e.r.fin || e.r.drowned || G.t > 60)) endHeat();
     }
     // звук двигателя игрока
     const pLane = G.playerLane >= 0 ? G.lanes[G.playerLane] : null;
@@ -605,7 +715,9 @@
     let hint = '';
     if (G.screen === 'racing' && pr && !pr.fin) {
       const nearWater = MR.nextBathDist(G.track, pr.x) < 9;
-      if (pr.cut > 0) hint = 'ДВИГАТЕЛЬ ЗАГЛОХ — жди';
+      if (pr.drowned) hint = 'УТОНУЛ';
+      else if (pr.dead) hint = pr.deadT < MR.C.RESTART ? 'ЗАГЛОХ В ВОДЕ — отпусти газ…' : 'ЖМИ ГАЗ — заводи, пока не утонул!';
+      else if (pr.cut > 0) hint = 'ДВИГАТЕЛЬ ЗАГЛОХ — жди';
       else if (pr.d > 0.02) hint = 'Держи газ в зелёной зоне тахометра';
       else if (nearWater && pr.rpm > pr.hi - 0.05) hint = 'Перед водой сбрось обороты!';
       else if (nearWater) hint = 'Сейчас вода — газ в зелёную зону';
@@ -618,7 +730,7 @@
         const done = e.runs.length;
         const avg = done ? e.total / done : 20;
         let v = e.total + (4 - done) * avg;
-        if (e.isPlayer && !pr.fin) v = e.total + Math.max(0, G.t);
+        if (e.isPlayer && !pr.fin) v = e.total + (pr.drowned ? MR.C.TLIMIT : Math.max(0, G.t));
         return v;
       });
       const mine = proj[0];

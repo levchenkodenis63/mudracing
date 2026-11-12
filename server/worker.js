@@ -1,6 +1,6 @@
 /* ===== MUD RACING — сервер общей таблицы рекордов (Cloudflare Worker + D1) =====
 
-   GET    /scores?diff=<easy|normal|hard|all>&me=<cid>   топ-20 + место самого игрока
+   GET    /scores?diff=<easy|normal|hard|extreme|all>&me=<cid>   топ-20 + место самого игрока
    POST   /scores                                        прислать лучший результат игрока на уровне
    DELETE /scores/<id>                                   удалить запись (модерация, нужен ADMIN_TOKEN)
 
@@ -11,9 +11,9 @@
 
 const TOP = 20;
 // простая проверка на корректность (не защита от накрутки):
-// 4 заезда по 15–92 с — быстрее 16.7 с за заезд проехать нельзя, лимит заезда 90 с + штраф 2 с
+// 4 заезда по 15–92 с — быстрее 16.7 с за заезд проехать нельзя, лимит заезда (и «утонул») 90 с + штраф 2 с
 const MIN_TOTAL = 60, MAX_TOTAL = 368;
-const DIFFS = ['easy', 'normal', 'hard'];
+const DIFFS = ['easy', 'normal', 'hard', 'extreme'];
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',          // игра открывается и с file://, и с любого хостинга

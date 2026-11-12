@@ -4,3 +4,4 @@ graphify-out/
 server/.wrangler/
 node_modules/
 server/.admin_token
+server/backups/

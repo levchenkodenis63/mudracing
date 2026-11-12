@@ -26,7 +26,11 @@ const MR = (function () {
     IDLE: 0.12,
     WB: 1.45,       // колёсная база
     WR: 0.44,       // радиус колеса
-    TLIMIT: 90
+    TLIMIT: 90,
+    // «Экстрим»: заглох в воде — мотор сам не заводится
+    RESTART: 0.8,   // завести снова (отпустить и нажать газ) можно не раньше, с
+    DROWN: 2.0,     // мотор стоит в воде столько — квадроцикл тонет, с
+    SINK_P: 0.10    // шанс бота утонуть в заезде: SINK_P × (1.15 − skill)
   };
 
   /* ---------- Трасса ---------- */
@@ -128,17 +132,40 @@ const MR = (function () {
       rpm: C.IDLE, heat: 0, dig: 0, cut: 0, go: false, fin: false, time: 0,
       lo: 0.55, hi: 1, d: 0, depth: 0, spin: false, float: false,
       wheel: 0, pitch: 0, entered: [false, false, false], ev: [],
-      top: 0, react: null, clean: 0, floods: 0, heats: 0, gas: false
+      top: 0, react: null, clean: 0, floods: 0, heats: 0, gas: false,
+      extreme: false, dead: false, deadT: 0, prevGas: false, drowned: false, sinkT: 0
     };
   }
 
   function stepRider(r, track, l, gas, dt, t) {
-    if (r.cut > 0) { r.cut -= dt; gas = false; }
-    if (r.fin) gas = false;
-    r.gas = gas;
+    // утонул: только медленно уходит под воду
+    if (r.drowned) {
+      r.sinkT += dt; r.v = 0; r.gas = false; r.spin = false;
+      r.rpm = Math.max(C.IDLE, r.rpm - dt);
+      if (r.sinkT < 2.5) r.y -= 0.45 * dt;
+      r.pitch += (0.18 - r.pitch) * Math.min(1, dt * 2);
+      return;
+    }
+    const pressed = gas, fresh = pressed && !r.prevGas;
+    r.prevGas = pressed;
     const depth = depthAt(track, l, r.x);
     const d = clamp(depth / C.FLOAT, 0, 1);
     r.d = d; r.depth = depth; r.float = depth > C.FLOAT;
+    if (r.dead) {
+      // «Экстрим»: заглох в воде — завести можно только новым нажатием газа
+      r.deadT += dt; r.cut = 1; gas = false;
+      if (r.deadT >= C.RESTART && fresh) {
+        r.dead = false; r.cut = 0; r.ev.push({ t: 'restart' });
+      } else if (d > 0.02 && r.deadT >= C.DROWN) {
+        r.dead = false; r.cut = 0; r.drowned = true; r.sinkT = 0; r.v = 0;
+        r.ev.push({ t: 'drown' });
+        return;
+      } else if (d <= 0.02 && r.deadT >= 1.6) {
+        r.dead = false; r.cut = 0;   // выкатился из воды — заводится как обычно
+      }
+    } else if (r.cut > 0) { r.cut -= dt; gas = false; }
+    if (r.fin) gas = false;
+    r.gas = gas;
     const z = zone(d), lo = z[0], hi = z[1];
     r.lo = lo; r.hi = hi;
 
@@ -163,9 +190,11 @@ const MR = (function () {
         r.dig = Math.max(0, r.dig - 0.9 * dt);
         r.heat = Math.max(0, r.heat - 0.11 * dt);
       }
-      if (r.heat >= 1 && r.cut <= 0 && !r.fin) {
-        r.cut = 1.6; r.heat = 0.6; r.heats++;
-        r.ev.push({ t: 'overheat' });
+      if (r.heat >= 1 && r.cut <= 0 && !r.dead && !r.fin) {
+        r.heat = 0.6; r.heats++;
+        if (r.extreme && inWater) { r.dead = true; r.deadT = 0; r.cut = 1; }
+        else r.cut = 1.6;
+        r.ev.push({ t: 'overheat', dead: r.dead });
       }
       const gF = groundAt(track, l, r.x + 0.6), gR = groundAt(track, l, r.x - 0.6);
       const slope = (gF - gR) / 1.2;
@@ -236,10 +265,13 @@ const MR = (function () {
   }
 
   /* ---------- ИИ ---------- */
-  function makeAIRun(skill, rnd) {
+  function makeAIRun(skill, rnd, extreme) {
     const form = (rnd() - 0.5) * 0.12;             // «форма» в конкретном заезде
     const s = clamp(skill + form, 0.05, 1);
+    // «Экстрим»: иногда бот перекручивает в воде, глохнет и не успевает завестись
+    const sinkBath = extreme && rnd() < C.SINK_P * (1.15 - s) ? Math.floor(rnd() * 3) : -1;
     return {
+      sinkBath, restartAt: extreme ? C.RESTART + 0.1 + rnd() * 0.5 : C.RESTART,
       skill: s,
       react: 0.17 + rnd() * 0.42 * (1.25 - s),
       aim: 0.42 + 0.42 * s,
@@ -251,6 +283,8 @@ const MR = (function () {
   }
   function aiGas(ai, r, track, t, dt, rnd) {
     if (t < (ai.fs ? 0 : ai.react)) return false;
+    if (r.dead) return ai.sinkBath < 0 && r.deadT >= ai.restartAt;   // заводит, если не «тонущий» заезд
+    if (ai.sinkBath >= 0 && bathAt(track, r.x) === ai.sinkBath && r.d > 0.3) return true;   // перекрутил
     ai.nt -= dt;
     if (ai.nt <= 0) { ai.nt = 0.25 + rnd() * 0.5; ai.nT = (rnd() * 2 - 1) * ai.amp; }
     ai.n += (ai.nT - ai.n) * Math.min(1, dt * 6);
@@ -262,11 +296,12 @@ const MR = (function () {
     if (r.air) target = Math.min(target, ai.careful ? 0.7 : 0.95);
     return r.rpm < target;
   }
-  function simRun(track, l, skill, rnd) {
-    const ai = makeAIRun(skill, rnd);
+  function simRun(track, l, skill, rnd, extreme) {
+    const ai = makeAIRun(skill, rnd, extreme);
     const r = newRider();
+    r.extreme = !!extreme;
     let t = 0;
-    while (!r.fin && t < C.TLIMIT) {
+    while (!r.fin && !r.drowned && t < C.TLIMIT) {
       t += C.DT;
       const gas = aiGas(ai, r, track, t, C.DT, rnd);
       if (gas && !r.go) { r.go = true; r.react = t; }
@@ -275,7 +310,7 @@ const MR = (function () {
     }
     const raw = r.fin ? r.time : C.TLIMIT;
     const pen = ai.fs ? C.PENALTY : 0;
-    return { raw, pen, total: raw + pen, react: ai.fs ? 0 : r.react, top: r.top };
+    return { raw, pen, total: raw + pen, react: ai.fs ? 0 : r.react, top: r.top, drowned: r.drowned };
   }
 
   /* ---------- Жеребьёвка ---------- */

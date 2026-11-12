@@ -7,7 +7,7 @@
 <style>
   :root{
     --orange:#ff7a1f; --orange2:#ffa14d; --ink:#0b0c0f; --panel:#12141a;
-    --hero:url("img/hero.jpg");
+    --hero:url("img/hero.jpg"); --judge:url("img/judge.jpg"); --fail:url("img/fail.jpg");
     --line:rgba(255,255,255,.12); --txt:#eceef2; --dim:#9aa1ad; --green:#7dffa8;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -117,6 +117,27 @@
     border-color:rgba(255,255,255,.12)}
   .panel.hero .lane-row{border-left:3px solid rgba(255,255,255,.18)}
   .panel.hero .lane-row.me{border-left-color:var(--orange)}
+  /* «Экстрим»: вопрос по регламенту и «утонул» — другие фото на фоне */
+  .panel.hero.judge .hero-bg{background-position:30% 18%;
+    background-image:linear-gradient(180deg,rgba(6,7,9,.0) 0%,rgba(6,7,9,.08) 28%,rgba(6,7,9,.66) 50%,rgba(6,7,9,.94) 70%,rgba(6,7,9,.97) 100%),var(--judge)}
+  /* на фото уже есть надпись «ПОТРАЧЕНО» — показываем его целиком над текстом */
+  .panel.hero.fail .hero-bg{position:relative;inset:auto;transform:none;aspect-ratio:1100/738;background-position:50% 50%;
+    background-image:linear-gradient(180deg,rgba(6,7,9,0) 0%,rgba(6,7,9,0) 82%,rgba(18,20,26,1) 100%),var(--fail)}
+  .panel.hero.fail .hero-in{min-height:0;padding-top:6px}
+  .panel.hero.fail .hero-top{display:none}
+  .panel.hero.fail .hero-bg::after,.panel.hero.judge .hero-bg::after{display:none}
+  .panel.hero.fail h2{color:#ff6a55}
+  .panel.hero .heat-res .kicker{display:none}
+  .panel.hero .heat-res .res-row{background:rgba(8,9,12,.66);backdrop-filter:blur(6px)}
+  .panel.hero .q-text{font-size:17px;font-weight:700;max-width:none;margin:2px 0 12px;line-height:1.4}
+  .qa{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+  .qa button{text-align:left;background:rgba(8,9,12,.72);backdrop-filter:blur(6px);color:#eceef2;
+    border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:12px 14px;font:inherit;font-size:14.5px;
+    cursor:pointer;transition:border-color .15s,background .15s}
+  .qa button:hover:not(:disabled){border-color:var(--orange);background:rgba(30,20,12,.8)}
+  .qa button:disabled{cursor:default;opacity:.75}
+  .qa button.ok{border-color:#3bd16f;background:rgba(18,70,38,.85);opacity:1}
+  .qa button.bad{border-color:#ff5a4a;background:rgba(90,22,18,.85);opacity:1}
   .credit{position:absolute;right:12px;bottom:8px;font-size:10px;color:rgba(255,255,255,.35);
     letter-spacing:.4px;z-index:2;pointer-events:none}
 
@@ -182,6 +203,7 @@
 <div id="overlay"></div>
 <div id="gasped" class="on">ГАЗ</div>
 <button id="snd" title="Звук">♪</button>
+<script type="application/json" id="mr-questions" data-src="questions.json"></script>
 <script src="src/core.js"></script>
 <script src="src/store.js"></script>
 <script src="src/sound.js"></script>

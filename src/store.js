@@ -59,7 +59,7 @@ const STORE = (function () {
     return {
       n: cleanName(r.n, 'Гонщик'),
       t: Math.round(t * 100) / 100,
-      d: (r.d === 'easy' || r.d === 'hard') ? r.d : 'normal',
+      d: (r.d === 'easy' || r.d === 'hard' || r.d === 'extreme') ? r.d : 'normal',
       b: isFinite(Number(r.b)) ? Math.round(Number(r.b) * 100) / 100 : null,
       p: isFinite(Number(r.p)) ? Math.max(1, Math.min(99, Math.round(Number(r.p)))) : null,
       ts: isFinite(Number(r.ts)) ? Number(r.ts) : Date.now()
@@ -81,9 +81,9 @@ const STORE = (function () {
     return id;
   }
 
-  /* какие результаты уже отправлены на сервер: { easy|normal|hard: "ts|время|имя" } */
+  /* какие результаты уже отправлены на сервер: { easy|normal|hard|extreme: "ts|время|имя" } */
   const SYNC_KEY = 'mudracing.synced';
-  const DIFFS = ['easy', 'normal', 'hard'];
+  const DIFFS = ['easy', 'normal', 'hard', 'extreme'];
   let syncing = null;
   function readSynced() {
     let raw = '';
@@ -115,7 +115,7 @@ const STORE = (function () {
     get online() { return !!API_URL; },
     /* досылает в общую таблицу лучший локальный результат на каждом уровне, если он ещё
        не отправлен (или с тех пор сменилось имя).
-       Ответ: { ok, results: { easy|normal|hard: ответ сервера } } — только по отправленным уровням */
+       Ответ: { ok, results: { easy|normal|hard|extreme: ответ сервера } } — только по отправленным уровням */
     syncBest() {
       if (!API_URL) return Promise.resolve({ ok: false, error: 'offline', results: {} });
       if (syncing) return syncing;
@@ -144,7 +144,7 @@ const STORE = (function () {
       })().finally(() => { syncing = null; });
       return syncing;
     },
-    /* общий топ уровня (diff = easy|normal|hard|all) + место самого игрока */
+    /* общий топ уровня (diff = easy|normal|hard|extreme|all) + место самого игрока */
     globalTop(diff) {
       return api('/scores?diff=' + encodeURIComponent(diff || 'all') + '&me=' + encodeURIComponent(cid()), { method: 'GET' });
     },

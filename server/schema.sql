@@ -8,7 +8,7 @@
 CREATE TABLE IF NOT EXISTS scores (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   cid       TEXT    NOT NULL,
-  diff      TEXT    NOT NULL CHECK (diff IN ('easy', 'normal', 'hard')),
+  diff      TEXT    NOT NULL CHECK (diff IN ('easy', 'normal', 'hard', 'extreme')),
   name      TEXT    NOT NULL,
   total     REAL    NOT NULL,
   best_lap  REAL,
