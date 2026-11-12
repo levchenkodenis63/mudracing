@@ -12,5 +12,5 @@ js='\n'.join('/* ===== %s ===== */\n%s'%(p, open(p).read()) for p in order)
 inline='<script>\n'+js.replace('</script>','<\\/script>')+'\n</script>'
 html=re.sub(r'(?:<script src="src/[a-z]+\.js"></script>\s*)+', lambda m: inline, html)
 html=html.replace('<title>MUD RACING — квадроспорт</title>','<title>MUD RACING — квадроспорт с водными препятствиями</title>')
-open('../MudRacing.html','w',encoding='utf-8').write(html)
+open('docs/index.html','w',encoding='utf-8').write(html)
 print('built', len(html)//1024, 'KB')
