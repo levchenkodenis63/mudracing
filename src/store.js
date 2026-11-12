@@ -5,8 +5,12 @@
    игра не падает, просто рекорды не переживут перезагрузку. */
 const STORE = (function () {
   const KEY = 'mudracing.v1';
+  const CID_KEY = 'mudracing.cid';
   const MAX = 20;
-  const mem = { name: '', records: [] };
+  /* адрес сервера общей таблицы (server/worker.js); пусто — только локальные рекорды */
+  const API_URL = 'https://mudracing-scores.levchenkodenis63.workers.dev';
+  const TIMEOUT = 7000;
+  const mem = { name: '', records: [], cid: '' };
   let persistent = false;
 
   try {
@@ -65,7 +69,85 @@ const STORE = (function () {
     return list.map(sane).filter(Boolean).sort((a, b) => a.t - b.t).slice(0, MAX);
   }
 
+  /* случайный id браузера: по нему сервер хранит лучший результат игрока */
+  function cid() {
+    let id = '';
+    try { id = persistent ? (localStorage.getItem(CID_KEY) || '') : mem.cid; } catch (e) { id = mem.cid; }
+    if (/^[a-zA-Z0-9-]{8,40}$/.test(id)) return id;
+    id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID()
+      : 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+    mem.cid = id;
+    try { if (persistent) localStorage.setItem(CID_KEY, id); } catch (e) { /* остаётся в памяти */ }
+    return id;
+  }
+
+  /* какие результаты уже отправлены на сервер: { easy|normal|hard: "ts|время|имя" } */
+  const SYNC_KEY = 'mudracing.synced';
+  const DIFFS = ['easy', 'normal', 'hard'];
+  let syncing = null;
+  function readSynced() {
+    let raw = '';
+    try { raw = persistent ? (localStorage.getItem(SYNC_KEY) || '') : (mem.synced || ''); } catch (e) { raw = mem.synced || ''; }
+    try { const o = JSON.parse(raw); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; }
+  }
+  function writeSynced(o) {
+    const v = JSON.stringify(o);
+    mem.synced = v;
+    try { if (persistent) localStorage.setItem(SYNC_KEY, v); } catch (e) { /* остаётся в памяти */ }
+  }
+
+  /* запрос к серверу с таймаутом; всегда резолвится объектом {ok, ...} */
+  async function api(path, opts) {
+    if (!API_URL) return { ok: false, error: 'offline' };
+    const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = ctl ? setTimeout(() => ctl.abort(), TIMEOUT) : null;
+    try {
+      const res = await fetch(API_URL.replace(/\/+$/, '') + path, Object.assign({ signal: ctl ? ctl.signal : undefined }, opts));
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) return { ok: false, error: data.error || ('http ' + res.status), status: res.status };
+      return data;
+    } catch (e) {
+      return { ok: false, error: e && e.name === 'AbortError' ? 'timeout' : 'network' };
+    } finally { if (timer) clearTimeout(timer); }
+  }
+
   return {
+    get online() { return !!API_URL; },
+    /* досылает в общую таблицу лучший локальный результат на каждом уровне, если он ещё
+       не отправлен (или с тех пор сменилось имя).
+       Ответ: { ok, results: { easy|normal|hard: ответ сервера } } — только по отправленным уровням */
+    syncBest() {
+      if (!API_URL) return Promise.resolve({ ok: false, error: 'offline', results: {} });
+      if (syncing) return syncing;
+      syncing = (async () => {
+        const data = readRaw();
+        const list = sorted(data.records);
+        const own = cleanName(data.name, '');
+        const synced = readSynced();
+        const results = {};
+        let ok = true;
+        for (const d of DIFFS) {
+          const top = list.find((r) => r.d === d);
+          if (!top) continue;
+          const name = own || cleanName(top.n === 'ВЫ' ? '' : top.n, 'Гонщик');
+          const key = [top.ts, top.t, name].join('|');
+          if (synced[d] === key) continue;
+          const res = await api('/scores', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cid: cid(), name, diff: d, total: top.t, bestLap: top.b, place: top.p, ts: top.ts })
+          });
+          results[d] = res;
+          if (res.ok) { synced[d] = key; writeSynced(synced); } else { ok = false; if (!res.status) break; }   // нет связи — дальше не пробуем
+        }
+        return { ok, results };
+      })().finally(() => { syncing = null; });
+      return syncing;
+    },
+    /* общий топ уровня (diff = easy|normal|hard|all) + место самого игрока */
+    globalTop(diff) {
+      return api('/scores?diff=' + encodeURIComponent(diff || 'all') + '&me=' + encodeURIComponent(cid()), { method: 'GET' });
+    },
     get name() { return cleanName(readRaw().name, ''); },
     set name(v) {
       const d = readRaw(); d.name = cleanName(v, ''); writeRaw(d);

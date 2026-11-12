@@ -1,3 +1,6 @@
 graphify-out/
 .DS_Store
 .idea/
+server/.wrangler/
+node_modules/
+server/.admin_token

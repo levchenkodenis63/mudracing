@@ -11,7 +11,10 @@
   const dbg = { auto: false };
   window.__auto = (v) => { dbg.auto = v; };
   const GASKEYS = ['ArrowUp', 'KeyW', 'Space', 'KeyD', 'ArrowRight'];
+  // клавиши газа не должны мешать набору текста (в русской раскладке W/D/S — это «ц», «в», «ы»)
+  const typing = (e) => { const t = e.target; return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable); };
   addEventListener('keydown', (e) => {
+    if (typing(e)) return;
     if (GASKEYS.includes(e.code) || e.code === 'ArrowDown' || e.code === 'KeyS') e.preventDefault();
     if (GASKEYS.includes(e.code)) input.gas = true;
     if (e.code === 'Enter' || e.code === 'NumpadEnter') { const b = ov.querySelector('.btn.primary'); if (b) b.click(); }
@@ -72,56 +75,112 @@
   }
 
   /* ---------- таблица рекордов ---------- */
-  function recordsScreen(freshIdx) {
-    G.screen = 'records';
-    const list = STORE.records;
-    const best = list.length ? list[0].t : null;
-    let rows = '';
-    if (!list.length) {
-      rows = `<div class="empty">Пока пусто.<br>Проедь чемпионат — результат попадёт сюда.</div>`;
-    } else {
-      list.forEach((r, i) => {
-        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
-        const cls = ['top1', 'top2', 'top3'][i] || '';
-        const fresh = freshIdx && (i + 1) === freshIdx ? ' fresh' : '';
-        const meta = [DIFFNAME[r.d] || 'Любители'];
-        if (r.p) meta.push(r.p + '-е место');
-        if (r.b) meta.push('лучший круг ' + r.b.toFixed(2));
-        rows += `<div class="rec-row ${cls}${fresh}">
+  // вкладки: «мои» (localStorage) и «все игроки» (сервер);
+  // уровни: новички / любители / профи / абсолют (лучшее на любом уровне, с пометкой уровня)
+  const REC = { tab: 'local', diff: null, req: 0 };
+  const LEVELS = [['easy', 'Новички'], ['normal', 'Любители'], ['hard', 'Профи'], ['all', 'Абсолют']];
+  function recRows(list, freshTs, showLevel) {
+    return list.map((r, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+      const cls = ['top1', 'top2', 'top3'][i] || '';
+      const isFresh = !!freshTs && r.ts === freshTs;
+      const meta = [];
+      if (showLevel && r.d) meta.push(DIFFNAME[r.d] || 'Любители');
+      if (r.p) meta.push(r.p + '-е место');
+      if (r.b) meta.push('лучший круг ' + Number(r.b).toFixed(2));
+      const badge = r.me ? 'это ты' : isFresh ? 'новый' : '';
+      return `<div class="rec-row ${cls}${r.me || isFresh ? ' fresh' : ''}">
           <span class="pl">${medal}</span>
-          <span class="who"><b>${escHtml(r.n)}</b>${fresh ? '<span class="badge">новый</span>' : ''}
+          <span class="who"><b>${escHtml(r.n)}</b>${badge ? '<span class="badge">' + badge + '</span>' : ''}
             <span class="meta">${escHtml(meta.join(' · '))}</span></span>
-          <span class="tm">${r.t.toFixed(2)}</span>
+          <span class="tm">${Number(r.t).toFixed(2)}</span>
         </div>`;
-      });
+    }).join('');
+  }
+  function recordsScreen(opts) {
+    opts = opts || {};
+    if (opts.tab) REC.tab = opts.tab;
+    if (opts.diff) REC.diff = opts.diff;
+    if (!REC.diff) REC.diff = G.diff;          // по умолчанию — уровень, выбранный в меню
+    if (!STORE.online) REC.tab = 'local';
+    const diff = REC.diff, abs = diff === 'all', lvl = abs ? 'абсолют' : (DIFFNAME[diff] || '').toLowerCase();
+    G.screen = 'records';
+    const req = ++REC.req;
+    const global = REC.tab === 'global';
+
+    const tabs = `<div class="rec-tabs">${STORE.online ? `<div class="seg" data-rec="tab">
+        <button data-v="local" class="${global ? '' : 'on'}">Мои</button>
+        <button data-v="global" class="${global ? 'on' : ''}">Все игроки</button></div>` : ''}
+      <div class="seg" data-rec="diff">${LEVELS.map(([v, t]) =>
+        `<button data-v="${v}" class="${diff === v ? 'on' : ''}">${t}</button>`).join('')}</div></div>`;
+
+    let kicker, sub, body, note;
+    if (!global) {
+      const all = STORE.records;
+      const list = abs ? all : all.filter((r) => r.d === diff);
+      kicker = 'мои рекорды · ' + lvl + (list.length ? ' · лучшее ' + list[0].t.toFixed(2) : '');
+      sub = 'сумма четырёх заездов · ' + (abs ? `${list.length} из 20` : `результатов: ${list.length}`);
+      body = recRows(list, opts.fresh, abs) || `<div class="empty">${all.length ? 'На этом уровне пока нет результатов.' : 'Пока пусто.'}<br>Проедь чемпионат — результат попадёт сюда.</div>`;
+      note = !STORE.persistent ? 'Браузер запретил локальное хранилище: рекорды не сохранятся после перезагрузки.'
+        : STORE.online ? 'Твои рекорды хранятся в этом браузере. В общую таблицу уходит лучший результат на каждом уровне.'
+        : 'Рекорды хранятся в этом браузере (localStorage) — у каждого игрока своя таблица.';
+    } else {
+      kicker = 'общая таблица · ' + lvl;
+      sub = 'лучший результат каждого игрока · сумма четырёх заездов';
+      body = '<div class="empty">Загружаю общую таблицу…</div>';
+      note = abs ? 'Абсолют — лучший результат каждого игрока на любом уровне соперников.'
+        : 'У каждого игрока здесь одна строка — его лучший результат на этом уровне.';
     }
-    const note = STORE.persistent
-      ? 'Рекорды хранятся в этом браузере (localStorage) — у каждого игрока своя таблица.'
-      : 'Браузер запретил локальное хранилище: рекорды не сохранятся после перезагрузки.';
     show(`
-      <div class="kicker">таблица рекордов${best ? ' · лучшее ' + best.toFixed(2) : ''}</div>
+      <div class="kicker" id="rec-kicker">${escHtml(kicker)}</div>
       <h2>Лучшие результаты</h2>
-      <div class="sub">сумма четырёх заездов · ${list.length} из 20</div>
-      <div class="table">${rows}</div>
-      <div class="sub small">${note}</div>
+      ${tabs}
+      <div class="sub" id="rec-sub">${escHtml(sub)}</div>
+      <div class="table" id="rec-table">${body}</div>
+      <div class="sub small">${escHtml(note)}</div>
       <div class="rowbtns">
-        <button class="btn" id="btn-rec-clear">ОЧИСТИТЬ</button>
+        ${global ? '' : '<button class="btn" id="btn-rec-clear">ОЧИСТИТЬ</button>'}
         <button class="btn primary" id="btn-rec-back">НАЗАД</button>
       </div>
     `);
-    document.getElementById('btn-rec-back').addEventListener('click', () => { hide(); menu(); });
-    document.getElementById('btn-rec-clear').addEventListener('click', () => {
-      if (document.getElementById('btn-rec-clear').dataset.armed === '1') {
-        STORE.clear(); hide(); setTimeout(() => recordsScreen(), 120); return;
-      }
-      const b = document.getElementById('btn-rec-clear');
-      b.dataset.armed = '1'; b.textContent = 'ТОЧНО ОЧИСТИТЬ?'; b.style.color = '#ff8a6a';
+    ov.querySelectorAll('[data-rec] button').forEach((b) => b.addEventListener('click', () =>
+      recordsScreen(b.parentNode.dataset.rec === 'tab' ? { tab: b.dataset.v } : { diff: b.dataset.v })));
+    document.getElementById('btn-rec-back').addEventListener('click', () => { REC.req++; hide(); menu(); });
+    const clr = document.getElementById('btn-rec-clear');
+    if (clr) clr.addEventListener('click', () => {
+      if (clr.dataset.armed === '1') { STORE.clear(); hide(); setTimeout(() => recordsScreen(), 120); return; }
+      clr.dataset.armed = '1'; clr.textContent = 'ТОЧНО ОЧИСТИТЬ?'; clr.style.color = '#ff8a6a';
     });
+
+    if (global) {
+      // сначала досылаем свой лучший результат (если ещё не там), потом читаем таблицу
+      STORE.syncBest().then(() => STORE.globalTop(diff)).then((res) => {
+        if (req !== REC.req || G.screen !== 'records') return;   // пользователь уже ушёл с экрана
+        const tbl = document.getElementById('rec-table'); if (!tbl) return;
+        if (!res.ok) {
+          tbl.innerHTML = `<div class="empty">Не удалось загрузить общую таблицу${res.error === 'timeout' ? ' (сервер не ответил)' : ''}.<br>Проверь интернет и попробуй ещё раз.</div>`;
+          return;
+        }
+        let html = recRows(res.top, null, abs) || `<div class="empty">${abs ? 'Пока никто не записал результат.' : 'На этом уровне ещё никто не записал результат.'}<br>Будь первым!</div>`;
+        if (res.mine) {
+          html += `<div class="rec-row fresh"><span class="pl">${res.mine.rank}</span>
+            <span class="who"><b>${escHtml(res.mine.n)}</b><span class="badge">это ты</span>
+              <span class="meta">твоё место${abs && res.mine.d ? ' · ' + escHtml(DIFFNAME[res.mine.d] || '') : ''}</span></span>
+            <span class="tm">${Number(res.mine.t).toFixed(2)}</span></div>`;
+        }
+        tbl.innerHTML = html;
+        const sb = document.getElementById('rec-sub');
+        if (sb) sb.textContent = `лучший результат каждого игрока · игроков: ${res.count}`;
+        const k = document.getElementById('rec-kicker');
+        if (k && res.top.length) k.textContent = 'общая таблица · ' + lvl + ' · рекорд ' + Number(res.top[0].t).toFixed(2);
+      });
+    }
   }
 
   /* ---------- меню ---------- */
   function menu() {
     G.screen = 'menu'; G.lights = 0;
+    STORE.syncBest();   // дослать лучший результат, если раньше не было связи или сменилось имя
     G.track = MR.makeTrack(1);
     G.lanes = [null, null];
     RN.view.cam = -1.3;
@@ -202,7 +261,7 @@
       const cells = s.map((h) => {
         const a = h.lanes[0] === null ? null : G.riders[h.lanes[0]];
         const b = h.lanes[1] === null ? null : G.riders[h.lanes[1]];
-        const nm = (e, lane) => e ? `<span class="who ${e.isPlayer ? 'me' : ''}">${e.name}</span><i>д${lane}</i>` : '<span class="free">без пары</span>';
+        const nm = (e, lane) => e ? `<span class="who ${e.isPlayer ? 'me' : ''}">${escHtml(e.name)}</span><i>д${lane}</i>` : '<span class="free">без пары</span>';
         return `<div class="pair">${nm(a, 1)}<em>×</em>${nm(b, 2)}</div>`;
       }).join('');
       rows += `<div class="series"><div class="stitle">Серия ${i + 1}</div>${cells}</div>`;
@@ -263,7 +322,7 @@
       rows += `<div class="lane-row ${e && e.player ? 'me' : ''}"><span class="ln">дорожка ${l + 1}</span>${e ? `<b>${escHtml(e.name)}</b>` : '<b class="free">— без пары —</b>'}</div>`;
     }
     G.heroText = {
-      title: G.playerName && G.playerName !== 'ВЫ' ? G.playerName + ', готов?' : 'Готов?',
+      title: STORE.name ? STORE.name + ', готов?' : 'Готов?',
       sub: `Старт на <b>${laneTxt}</b>. Газ — только после зелёного: фальстарт +2.00 с.`
     };
     show(`
@@ -366,7 +425,7 @@
       const w = best && Math.abs(row.total - best.total) < 1e-6;
       html += `<div class="res-row ${row.e.player ? 'me' : ''} ${w ? 'win' : ''}">
         <span class="ln">дорожка ${row.lane + 1}</span>
-        <b>${row.e.name}</b>
+        <b>${escHtml(row.e.name)}</b>
         <span class="rt">${fmt(row.raw)}${row.pen ? `<i class="pen">+${row.pen.toFixed(2)}</i>` : ''}</span>
         <span class="tot">${fmt(row.total)}</span>
         <span class="diff">${best && row.total > best.total + 0.001 ? '+' + (row.total - best.total).toFixed(2) : 'лучший'}</span>
@@ -396,7 +455,7 @@
     sorted.forEach((e, i) => {
       const done = e.runs.length;
       rows += `<div class="res-row ${e.isPlayer ? 'me' : ''}">
-        <span class="pl">${i + 1}</span><b>${e.name}</b>
+        <span class="pl">${i + 1}</span><b>${escHtml(e.name)}</b>
         <span class="tot">${done ? fmt(e.total) : '—'}</span>
         <span class="diff">${done}/${4}</span></div>`;
     });
@@ -416,14 +475,15 @@
     sorted.forEach((e, i) => {
       const bestLap = Math.min(...e.runs.map((r) => r.total));
       rows += `<div class="res-row ${e.isPlayer ? 'me' : ''} ${i === 0 ? 'win' : ''}">
-        <span class="pl">${i + 1}</span><b>${e.name}</b>
+        <span class="pl">${i + 1}</span><b>${escHtml(e.name)}</b>
         <span class="tot">${fmt(e.total)}</span>
         <span class="diff">${i === 0 ? '🏆' : '+' + (e.total - win.total).toFixed(2)}</span>
         <span class="lap">лучший ${fmt(bestLap)}</span></div>`;
     });
     // рекорд засчитываем только за пройденный чемпионат
     const bestLapMe = me.runs.length ? Math.min(...me.runs.map((r) => r.total)) : null;
-    const rank = STORE.add({ n: me.name, t: me.total, d: G.diff, b: bestLapMe, p: place, ts: Date.now() });
+    const recTs = Date.now();
+    const rank = STORE.add({ n: me.name, t: me.total, d: G.diff, b: bestLapMe, p: place, ts: recTs });
     const isBest = rank === 1;
 
     const title = place === 1 ? 'ПОБЕДА!' : place <= 3 ? 'ПОДИУМ' : 'НЕ ПРОШЁЛ';
@@ -435,12 +495,35 @@
       ${rank ? `<div class="sub small" style="color:${isBest ? '#7dffa8' : '#ffd23e'}">
         ${isBest ? '🏆 Новый рекорд трассы!' : 'Результат записан в таблицу: ' + rank + '-е место.'}
         ${STORE.persistent ? '' : ' (не сохранится — браузер блокирует хранилище)'}</div>` : ''}
+      ${STORE.online ? '<div class="sub small" id="net-status">Общая таблица…</div>' : ''}
       <div class="rowbtns">
         <button class="btn" id="btn-records2">РЕКОРДЫ</button>
         <button class="btn primary" id="btn-again">ЕЩЁ РАЗ</button>
       </div>`);
     document.getElementById('btn-again').addEventListener('click', menu);
-    document.getElementById('btn-records2').addEventListener('click', () => { hide(); setTimeout(() => recordsScreen(rank), 130); });
+    document.getElementById('btn-records2').addEventListener('click', () => {
+      hide(); setTimeout(() => recordsScreen({ fresh: recTs, tab: 'local', diff: G.diff }), 130);
+    });
+    if (STORE.online) {
+      const diff = G.diff, lvl = DIFFNAME[diff];
+      const top = STORE.records.find((r) => r.d === diff);
+      const isBest = !!top && top.ts === recTs;      // этот чемпионат — новый личный рекорд на уровне?
+      STORE.syncBest().then((sync) => {
+        const st = document.getElementById('net-status');
+        if (!st || G.screen !== 'final') return;
+        const res = sync.results[diff];
+        if (isBest && res && res.ok) {
+          st.style.color = res.rank === 1 || res.absRank === 1 ? '#7dffa8' : '';
+          st.innerHTML = `🌍 Общая таблица · ${escHtml(lvl)}: <b>${res.rank}-е место</b>` +
+            (res.rank === 1 ? ' — лучший среди всех!' : '') +
+            ` · Абсолют: <b>${res.absRank}-е</b>`;
+        } else if (isBest || !sync.ok) {
+          st.textContent = 'Нет связи с сервером — результат отправится в общую таблицу позже.';
+        } else {
+          st.textContent = top ? `В общую таблицу (${lvl}) идёт только твой лучший результат на уровне — ${top.t.toFixed(2)}.` : '';
+        }
+      });
+    }
   }
 
   /* ---------- обновление ---------- */

@@ -17,7 +17,7 @@ const RN = (function () {
     ppm = clamp(H / 11.2, W / 30, W / 11);
     yFar = Math.round(H * 0.47); yNear = Math.round(yFar + LG * ppm);
     U = clamp(Math.min(W, H) / 720, 0.6, 1.35);
-    skyGrad = bankGrad = sandGrad = vigGrad = null;
+    skyGrad = bankGrad = vigGrad = null; sandGrad = [];
   }
   const sx = (x) => (x - view.cam) * ppm + W * 0.3;
   const xl = () => view.cam - (W * 0.3) / ppm - 1.5;
@@ -47,10 +47,13 @@ const RN = (function () {
   }
 
   /* ---------- фон ---------- */
-  let skyGrad = null, bankGrad = null, sandGrad = null, vigGrad = null;
+  let skyGrad = null, bankGrad = null, sandGrad = [], vigGrad = null;
   function drawSky() {
-    const g = skyGrad || (skyGrad = ctx.createLinearGradient(0, 0, 0, yFar));
-    g.addColorStop(0, '#5f9dd6'); g.addColorStop(0.7, '#cfe4f3'); g.addColorStop(1, '#e9f2f4');
+    let g = skyGrad;
+    if (!g) {
+      g = skyGrad = ctx.createLinearGradient(0, 0, 0, yFar);
+      g.addColorStop(0, '#5f9dd6'); g.addColorStop(0.7, '#cfe4f3'); g.addColorStop(1, '#e9f2f4');
+    }
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, yFar + 2);
     ctx.fillStyle = 'rgba(255,255,255,.88)';
     const span = 560 * U, off = view.cam * ppm * 0.04 + view.T * 5;
@@ -95,8 +98,11 @@ const RN = (function () {
     ctx.beginPath(); ctx.moveTo(sx(a), yFar + 4);
     for (let x = a; x <= b; x += 0.5) ctx.lineTo(sx(x), yFar - ridge(x) * ppm);
     ctx.lineTo(sx(b), yFar + 4); ctx.closePath();
-    const g = bankGrad || (bankGrad = ctx.createLinearGradient(0, yFar - 2 * ppm, 0, yFar));
-    g.addColorStop(0, '#efe5c8'); g.addColorStop(1, '#d3c298');
+    let g = bankGrad;
+    if (!g) {
+      g = bankGrad = ctx.createLinearGradient(0, yFar - 2 * ppm, 0, yFar);
+      g.addColorStop(0, '#efe5c8'); g.addColorStop(1, '#d3c298');
+    }
     ctx.fillStyle = g; ctx.fill();
     ctx.strokeStyle = 'rgba(120,100,60,.13)'; ctx.lineWidth = 1.5;
     for (let k = 0; k < 3; k++) {
@@ -366,8 +372,12 @@ const RN = (function () {
     ctx.beginPath(); ctx.moveTo(sx(a), H + 6);
     for (let x = a; x <= b; x += st) ctx.lineTo(sx(x), base - MR.hAt(lane, x) * ppm);
     ctx.lineTo(sx(b), H + 6); ctx.closePath();
-    const g = sandGrad || (sandGrad = ctx.createLinearGradient(0, base - 0.4 * ppm, 0, base + 4.2 * ppm));
-    g.addColorStop(0, '#e6dab6'); g.addColorStop(0.35, '#cdb98c'); g.addColorStop(1, '#a58b5a');
+    // у каждой дорожки своя базовая линия, поэтому и градиент свой
+    let g = sandGrad[l];
+    if (!g) {
+      g = sandGrad[l] = ctx.createLinearGradient(0, base - 0.4 * ppm, 0, base + 4.2 * ppm);
+      g.addColorStop(0, '#e6dab6'); g.addColorStop(0.35, '#cdb98c'); g.addColorStop(1, '#a58b5a');
+    }
     ctx.fillStyle = g; ctx.fill();
     ctx.strokeStyle = '#f3ead0'; ctx.lineWidth = 2; ctx.stroke();
     ctx.save(); ctx.clip();
@@ -622,8 +632,11 @@ const RN = (function () {
       ctx.globalAlpha = 1;
     }
     ctx.restore();
-    const vg = vigGrad || (vigGrad = ctx.createRadialGradient(W * 0.5, H * 0.52, Math.min(W, H) * 0.42, W * 0.5, H * 0.52, Math.max(W, H) * 0.78));
-    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.42)');
+    let vg = vigGrad;
+    if (!vg) {
+      vg = vigGrad = ctx.createRadialGradient(W * 0.5, H * 0.52, Math.min(W, H) * 0.42, W * 0.5, H * 0.52, Math.max(W, H) * 0.78);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.42)');
+    }
     ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
     if (S.hud) drawHUD(S);
     drawOverlayFx(S);
