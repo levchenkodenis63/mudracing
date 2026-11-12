@@ -30,7 +30,7 @@ python3 -m http.server 8000
 ## Сборка в один файл
 
 ```bash
-python3 build.py    # создаёт ../index.html
+python3 build.py    # создаёт docs/index.html
 ```
 
 Сборка встраивает все скрипты и фотографию (`img/hero.jpg` → base64),

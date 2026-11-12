@@ -195,7 +195,7 @@
       <div class="namefield"><span>Твоё имя</span>
         <input id="pname" type="text" maxlength="14" autocomplete="off" spellcheck="false"
                placeholder="Гонщик" value="${escAttr(STORE.name || '')}">
-        <div class="hint-line"><span>до 14 символов · попадёт в таблицу рекордов</span><button class="linkbtn" id="btn-records">рекорды</button></div>
+        <div class="hint-line"><span>до 14 символов · попадёт в таблицу рекордов</span></div>
       </div>
       <div class="opts">
         <div class="opt"><span>Участников</span>
@@ -205,7 +205,10 @@
           <div class="seg" data-opt="d"><button data-v="easy">Новички</button><button data-v="normal" class="on">Любители</button><button data-v="hard">Профи</button></div>
         </div>
       </div>
-      <button class="btn primary" id="btn-draw">ЖЕРЕБЬЁВКА</button>
+      <div class="rowbtns">
+        <button class="btn" id="btn-records">РЕЗУЛЬТАТЫ</button>
+        <button class="btn primary" id="btn-draw">ЖЕРЕБЬЁВКА</button>
+      </div>
       <div class="keys">Газ: <kbd>↑</kbd> <kbd>W</kbd> или <kbd>Space</kbd> (удерживай) · тап/палец по экрану на телефоне · <kbd>Enter</kbd> — далее</div>
     `);
     ov.querySelectorAll('.seg').forEach((seg) => {
@@ -221,7 +224,7 @@
     nameInp.addEventListener('keydown', (e) => {
       if (e.code === 'Enter') { e.preventDefault(); e.stopPropagation(); STORE.name = nameInp.value; nameInp.value = STORE.name; nameInp.blur(); newChampionship(); }
     });
-    document.getElementById('btn-records').addEventListener('click', (e) => { e.preventDefault(); STORE.name = nameInp.value; recordsScreen(); });
+    document.getElementById('btn-records').addEventListener('click', () => { STORE.name = nameInp.value; recordsScreen(); });
     document.getElementById('btn-draw').addEventListener('click', () => { STORE.name = nameInp.value; nameInp.value = STORE.name; newChampionship(); });
   }
 
