@@ -55,17 +55,68 @@
     series: [], si: 0, hi: 0, lanes: [null, null], playerLane: -1,
     t: 0, pre: 0, lights: 0, lightA: 0, started: false, pen: 0, fs: false,
     particles: [], splats: [], msgs: [], label: '', nRiders: 8, diff: 'normal',
-    heatRnd: null, ended: false, camTarget: null
+    heatRnd: null, ended: false, camTarget: null, playerName: '', heroText: null
   };
   window.__MRG = G;
 
   /* ---------- утилиты интерфейса ---------- */
-  function show(html) { ov.innerHTML = '<div class="panel">' + html + '</div>'; ov.classList.add('on'); }
+  function show(html, cls) { ov.innerHTML = '<div class="panel' + (cls ? ' ' + cls : '') + '">' + html + '</div>'; ov.classList.add('on'); }
   function hide() { ov.classList.remove('on'); if (ov.innerHTML) setTimeout(() => { if (!ov.classList.contains('on')) ov.innerHTML = ''; }, 220); }
   const fmt = (t) => (t === null || t === undefined || !isFinite(t) ? '—' : t.toFixed(2));
+  const escHtml = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const escAttr = escHtml;
+  const DIFFNAME = { easy: 'Новички', normal: 'Любители', hard: 'Профи' };
   function msg(text, col, big) {
     G.msgs.push({ text, col, big: big !== false, life: 1.5, max: 1.5 });
     if (G.msgs.length > 4) G.msgs.shift();
+  }
+
+  /* ---------- таблица рекордов ---------- */
+  function recordsScreen(freshIdx) {
+    G.screen = 'records';
+    const list = STORE.records;
+    const best = list.length ? list[0].t : null;
+    let rows = '';
+    if (!list.length) {
+      rows = `<div class="empty">Пока пусто.<br>Проедь чемпионат — результат попадёт сюда.</div>`;
+    } else {
+      list.forEach((r, i) => {
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+        const cls = ['top1', 'top2', 'top3'][i] || '';
+        const fresh = freshIdx && (i + 1) === freshIdx ? ' fresh' : '';
+        const meta = [DIFFNAME[r.d] || 'Любители'];
+        if (r.p) meta.push(r.p + '-е место');
+        if (r.b) meta.push('лучший круг ' + r.b.toFixed(2));
+        rows += `<div class="rec-row ${cls}${fresh}">
+          <span class="pl">${medal}</span>
+          <span class="who"><b>${escHtml(r.n)}</b>${fresh ? '<span class="badge">новый</span>' : ''}
+            <span class="meta">${escHtml(meta.join(' · '))}</span></span>
+          <span class="tm">${r.t.toFixed(2)}</span>
+        </div>`;
+      });
+    }
+    const note = STORE.persistent
+      ? 'Рекорды хранятся в этом браузере (localStorage) — у каждого игрока своя таблица.'
+      : 'Браузер запретил локальное хранилище: рекорды не сохранятся после перезагрузки.';
+    show(`
+      <div class="kicker">таблица рекордов${best ? ' · лучшее ' + best.toFixed(2) : ''}</div>
+      <h2>Лучшие результаты</h2>
+      <div class="sub">сумма четырёх заездов · ${list.length} из 20</div>
+      <div class="table">${rows}</div>
+      <div class="sub small">${note}</div>
+      <div class="rowbtns">
+        <button class="btn" id="btn-rec-clear">ОЧИСТИТЬ</button>
+        <button class="btn primary" id="btn-rec-back">НАЗАД</button>
+      </div>
+    `);
+    document.getElementById('btn-rec-back').addEventListener('click', () => { hide(); menu(); });
+    document.getElementById('btn-rec-clear').addEventListener('click', () => {
+      if (document.getElementById('btn-rec-clear').dataset.armed === '1') {
+        STORE.clear(); hide(); setTimeout(() => recordsScreen(), 120); return;
+      }
+      const b = document.getElementById('btn-rec-clear');
+      b.dataset.armed = '1'; b.textContent = 'ТОЧНО ОЧИСТИТЬ?'; b.style.color = '#ff8a6a';
+    });
   }
 
   /* ---------- меню ---------- */
@@ -81,6 +132,11 @@
         <div class="rule"><b>3 грязевые ванны</b> по 30–40 м, между ними короткие перемычки для разгона.</div>
         <div class="rule"><b>4 серии заездов</b> по жеребьёвке: 2 раза по одной дорожке, 2 — по другой. Победителя определяет <b>сумма четырёх времён</b>.</div>
         <div class="rule"><b>В воде — тяга, а не скорость.</b> Газ в зелёной зоне: перельёшь — гидроудар и потеря хода, недодашь — утонешь в колее.</div>
+      </div>
+      <div class="namefield"><span>Твоё имя</span>
+        <input id="pname" type="text" maxlength="14" autocomplete="off" spellcheck="false"
+               placeholder="Гонщик" value="${escAttr(STORE.name || '')}">
+        <div class="hint-line"><span>до 14 символов · попадёт в таблицу рекордов</span><button class="linkbtn" id="btn-records">рекорды</button></div>
       </div>
       <div class="opts">
         <div class="opt"><span>Участников</span>
@@ -100,7 +156,14 @@
         if (seg.dataset.opt === 'n') G.nRiders = +b.dataset.v; else G.diff = b.dataset.v;
       }));
     });
-    document.getElementById('btn-draw').addEventListener('click', newChampionship);
+    const nameInp = document.getElementById('pname');
+    nameInp.addEventListener('input', () => { G.playerName = STORE.cleanName(nameInp.value, 'ВЫ'); });
+    nameInp.addEventListener('change', () => { STORE.name = nameInp.value; nameInp.value = STORE.name; });
+    nameInp.addEventListener('keydown', (e) => {
+      if (e.code === 'Enter') { e.preventDefault(); e.stopPropagation(); STORE.name = nameInp.value; nameInp.value = STORE.name; nameInp.blur(); newChampionship(); }
+    });
+    document.getElementById('btn-records').addEventListener('click', (e) => { e.preventDefault(); STORE.name = nameInp.value; recordsScreen(); });
+    document.getElementById('btn-draw').addEventListener('click', () => { STORE.name = nameInp.value; nameInp.value = STORE.name; newChampionship(); });
   }
 
   /* ---------- жеребьёвка ---------- */
@@ -112,7 +175,8 @@
     const pool = MR.shuffle(NAMES.slice(), G.rnd);
     const looks = MR.shuffle(LOOKS.slice(), G.rnd);
     const d = DIFF[G.diff], used = [];
-    G.riders.push({ name: 'ВЫ', isPlayer: true, look: LOOKS[0], skill: 0, runs: [], total: 0, num: 0 });
+    const pName = STORE.name || G.playerName || 'ВЫ';
+    G.riders.push({ name: pName, isPlayer: true, look: LOOKS[0], skill: 0, runs: [], total: 0, num: 0 });
     for (let i = 1; i < G.nRiders; i++) {
       let lk, tries = 0;
       do { lk = looks[Math.floor(G.rnd() * looks.length)]; tries++; } while (used.includes(lk) && tries < 30);
@@ -196,15 +260,25 @@
     let rows = '';
     for (let l = 0; l < 2; l++) {
       const e = G.lanes[l];
-      rows += `<div class="lane-row ${e && e.player ? 'me' : ''}"><span class="ln">дорожка ${l + 1}</span>${e ? `<b>${e.name}</b>` : '<b class="free">— без пары —</b>'}</div>`;
+      rows += `<div class="lane-row ${e && e.player ? 'me' : ''}"><span class="ln">дорожка ${l + 1}</span>${e ? `<b>${escHtml(e.name)}</b>` : '<b class="free">— без пары —</b>'}</div>`;
     }
+    G.heroText = {
+      title: G.playerName && G.playerName !== 'ВЫ' ? G.playerName + ', готов?' : 'Готов?',
+      sub: `Старт на <b>${laneTxt}</b>. Газ — только после зелёного: фальстарт +2.00 с.`
+    };
     show(`
-      <div class="kicker">${G.label}</div>
-      ${rows}
-      <div class="sub">Ты стартуешь на <b>${laneTxt}</b>. Держи газ <b>только после зелёного</b>: фальстарт — +2.00 с.<br>
-      В воде следи за зелёной зоной тахометра: перельёшь — гидроудар и потеря хода, недодашь — тонешь в колее.</div>
-      <button class="btn primary" id="btn-start">ГОТОВ</button>
-    `);
+      <div class="hero-bg"></div>
+      <div class="hero-in">
+        <div class="hero-top"></div>
+        <div class="kicker">${escHtml(G.label)}</div>
+        <h2>${escHtml(G.heroText.title)}</h2>
+        <div class="sub">${G.heroText.sub}</div>
+        ${rows}
+        <div class="sub small">В воде следи за зелёной зоной тахометра: перельёшь — гидроудар и потеря хода, недодашь — тонешь в колее.</div>
+        <button class="btn primary" id="btn-start">ГОТОВ</button>
+        <div class="credit">фото: MUD RACING</div>
+      </div>
+    `, 'hero');
     G.screen = 'heatIntro';
     RN.view.cam = -1.3;
     document.getElementById('btn-start').addEventListener('click', () => {
@@ -347,14 +421,26 @@
         <span class="diff">${i === 0 ? '🏆' : '+' + (e.total - win.total).toFixed(2)}</span>
         <span class="lap">лучший ${fmt(bestLap)}</span></div>`;
     });
+    // рекорд засчитываем только за пройденный чемпионат
+    const bestLapMe = me.runs.length ? Math.min(...me.runs.map((r) => r.total)) : null;
+    const rank = STORE.add({ n: me.name, t: me.total, d: G.diff, b: bestLapMe, p: place, ts: Date.now() });
+    const isBest = rank === 1;
+
     const title = place === 1 ? 'ПОБЕДА!' : place <= 3 ? 'ПОДИУМ' : 'НЕ ПРОШЁЛ';
     const col = place === 1 ? '#7dffa8' : place <= 3 ? '#ffd23e' : '#ff8a6a';
     show(`<div class="kicker" style="color:${col}">${title} · ${place} место</div>
       <h2>Итоги чемпионата</h2>
       <div class="sub">сумма четырёх заездов — это и есть результат</div>
       <div class="table final">${rows}</div>
-      <button class="btn primary" id="btn-again">ЕЩЁ РАЗ</button>`);
+      ${rank ? `<div class="sub small" style="color:${isBest ? '#7dffa8' : '#ffd23e'}">
+        ${isBest ? '🏆 Новый рекорд трассы!' : 'Результат записан в таблицу: ' + rank + '-е место.'}
+        ${STORE.persistent ? '' : ' (не сохранится — браузер блокирует хранилище)'}</div>` : ''}
+      <div class="rowbtns">
+        <button class="btn" id="btn-records2">РЕКОРДЫ</button>
+        <button class="btn primary" id="btn-again">ЕЩЁ РАЗ</button>
+      </div>`);
     document.getElementById('btn-again').addEventListener('click', menu);
+    document.getElementById('btn-records2').addEventListener('click', () => { hide(); setTimeout(() => recordsScreen(rank), 130); });
   }
 
   /* ---------- обновление ---------- */

@@ -7,6 +7,7 @@
 <style>
   :root{
     --orange:#ff7a1f; --orange2:#ffa14d; --ink:#0b0c0f; --panel:#12141a;
+    --hero:url("img/hero.jpg");
     --line:rgba(255,255,255,.12); --txt:#eceef2; --dim:#9aa1ad; --green:#7dffa8;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -85,6 +86,72 @@
   .pl{width:22px;font-weight:900;color:#8b94a2;font-size:13px}
   .table{margin:6px 0 18px}
   .table.final .res-row:nth-child(1){background:linear-gradient(90deg,rgba(125,255,168,.16),rgba(125,255,168,.02))}
+
+  /* поле имени */
+  .namefield{display:flex;flex-direction:column;gap:7px;margin:0 0 16px}
+  .namefield span{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);font-weight:700}
+  #pname{width:100%;background:#0c0e12;border:1px solid var(--line);border-radius:11px;
+    padding:12px 14px;color:#fff;font:inherit;font-size:15px;font-weight:700;letter-spacing:.3px;
+    outline:none;transition:border-color .16s,box-shadow .16s}
+  #pname:focus{border-color:rgba(255,122,31,.65);box-shadow:0 0 0 3px rgba(255,122,31,.14)}
+  #pname::placeholder{color:#5f6673;font-weight:500}
+  .hint-line{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:-8px 0 16px;
+    font-size:11.5px;color:#6f7784}
+  .hint-line b{color:var(--orange);font-weight:700}
+  .linkbtn{background:none;border:0;color:#9aa1ad;font:inherit;font-size:12px;cursor:pointer;
+    text-decoration:underline;text-decoration-color:rgba(255,255,255,.22);padding:0}
+  .linkbtn:hover{color:#fff}
+
+  /* форма «Готов» с фотографией на фоне */
+  .panel.hero{position:relative;overflow:hidden;padding:0;border-color:rgba(255,255,255,.18)}
+  .panel.hero .hero-bg{position:absolute;inset:0;background:#0b0c0f 38% 12%/cover no-repeat;
+    background-image:linear-gradient(180deg,rgba(6,7,9,.02) 0%,rgba(6,7,9,.10) 30%,rgba(6,7,9,.62) 55%,rgba(6,7,9,.93) 78%,rgba(6,7,9,.97) 100%),var(--hero);
+    transform:scale(1.02)}
+  .panel.hero .hero-bg::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(90deg,rgba(6,7,9,.42) 0%,rgba(6,7,9,.06) 38%,rgba(6,7,9,0) 62%)}
+  .panel.hero .hero-in{position:relative;padding:22px 26px 24px;display:flex;flex-direction:column;justify-content:flex-end;min-height:min(78vh,620px)}
+  .panel.hero .hero-top{flex:1 1 auto;min-height:64px}
+  .panel.hero:not(.wide){max-width:640px}
+  .panel.hero .kicker{color:#ffc48a;text-shadow:0 2px 14px rgba(0,0,0,.95),0 0 3px rgba(0,0,0,.9)}
+  .panel.hero h2{margin:0 0 6px;font-size:clamp(26px,4.6vw,38px);color:#fff;
+    text-shadow:0 3px 22px rgba(0,0,0,1),0 1px 3px rgba(0,0,0,.95)}
+  .panel.hero .sub{color:#f0f3f7;text-shadow:0 2px 12px rgba(0,0,0,1),0 1px 3px rgba(0,0,0,.9);max-width:42ch}
+  .panel.hero .rule,.panel.hero .lane-row{background:rgba(8,9,12,.62);backdrop-filter:blur(6px);
+    border-color:rgba(255,255,255,.12)}
+  .panel.hero .lane-row{border-left:3px solid rgba(255,255,255,.18)}
+  .panel.hero .lane-row.me{border-left-color:var(--orange)}
+  .credit{position:absolute;right:12px;bottom:8px;font-size:10px;color:rgba(255,255,255,.35);
+    letter-spacing:.4px;z-index:2;pointer-events:none}
+
+  /* таблица рекордов */
+  .rec-row{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;
+    padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.06);margin-bottom:7px;font-size:14px}
+  .rec-row .pl{width:auto;font-weight:900;color:#8b94a2;font-size:13px;text-align:right}
+  .rec-row .who{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rec-row .who b{font-weight:800;color:#fff}
+  .rec-row .meta{display:block;font-size:11px;color:#6d7481;margin-top:2px;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  .rec-row .tm{font-variant-numeric:tabular-nums;font-weight:900;font-size:16px;text-align:right}
+  .rec-row.top1{background:linear-gradient(90deg,rgba(255,196,70,.18),rgba(255,196,70,.02));border-color:rgba(255,196,70,.35)}
+  .rec-row.top1 .tm{color:#ffd23e}
+  .rec-row.top2 .tm{color:#dfe3ea}
+  .rec-row.top3 .tm{color:#e8a87c}
+  .rec-row.fresh{border-color:rgba(125,255,168,.55);background:rgba(125,255,168,.10)}
+  .rec-row.fresh .tm{color:#7dffa8}
+  .badge{display:inline-block;font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;
+    padding:1px 6px;border-radius:5px;background:rgba(255,255,255,.10);color:#b9c0cb;margin-left:6px;
+    vertical-align:1px;font-weight:700}
+  .empty{text-align:center;color:#6d7481;font-size:13px;padding:26px 10px;line-height:1.6}
+  .rowbtns{display:flex;gap:10px;margin-top:12px}
+  .rowbtns .btn{flex:1}
+  @media(max-width:520px){
+    .panel.hero .hero-in{padding:18px 16px 18px;min-height:min(78vh,600px)}
+    .panel.hero .hero-bg{background-position:44% 10%}
+    .rec-row{grid-template-columns:22px 1fr auto;gap:7px;padding:9px 10px;font-size:13px}
+    .rec-row .tm{font-size:15px}
+    .rec-row .meta{font-size:10px}
+  }
   #gasped{position:fixed;right:18px;bottom:18px;width:104px;height:104px;border-radius:50%;display:none;
     align-items:center;justify-content:center;font-weight:900;letter-spacing:2px;font-size:15px;color:#1a0d02;
     background:radial-gradient(circle at 35% 30%,#ffb268,#ff7a1f 60%,#d9540c);
@@ -117,6 +184,7 @@
 <div id="gasped" class="on">ГАЗ</div>
 <button id="snd" title="Звук">♪</button>
 <script src="src/core.js"></script>
+<script src="src/store.js"></script>
 <script src="src/sound.js"></script>
 <script src="src/render.js"></script>
 <script src="src/game.js"></script>
