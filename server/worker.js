@@ -1,6 +1,6 @@
 /* ===== MUD RACING — сервер общей таблицы рекордов (Cloudflare Worker + D1) =====
 
-   GET    /scores?diff=<easy|normal|hard|extreme|all>&me=<cid>   топ-20 + место самого игрока
+   GET    /scores?diff=<easy|normal|hard|extreme|all>&me=<cid>&offset=<n>   20 строк начиная с n + место самого игрока
    POST   /scores                                        прислать лучший результат игрока на уровне
    DELETE /scores/<id>                                   удалить запись (модерация, нужен ADMIN_TOKEN)
 
@@ -77,9 +77,10 @@ async function getScores(url, env) {
   const diff = url.searchParams.get('diff') || 'all';
   if (diff !== 'all' && !DIFFS.includes(diff)) return fail(400, 'bad diff');
   const me = url.searchParams.get('me') || '';
+  const offset = Math.max(0, Math.min(100000, parseInt(url.searchParams.get('offset'), 10) || 0));   // страницы по TOP строк
   const { results } = diff === 'all'
-    ? await env.DB.prepare(ABS + ' ORDER BY s.total ASC, s.ts ASC LIMIT ?').bind(TOP).all()
-    : await env.DB.prepare('SELECT * FROM scores WHERE diff = ? ORDER BY total ASC, ts ASC LIMIT ?').bind(diff, TOP).all();
+    ? await env.DB.prepare(ABS + ' ORDER BY s.total ASC, s.ts ASC LIMIT ? OFFSET ?').bind(TOP, offset).all()
+    : await env.DB.prepare('SELECT * FROM scores WHERE diff = ? ORDER BY total ASC, ts ASC LIMIT ? OFFSET ?').bind(diff, TOP, offset).all();
   const top = results.map((r) => ({
     id: r.id, n: r.name, t: r.total, d: r.diff, b: r.best_lap, p: r.place, ts: r.ts,
     me: !!me && r.cid === me
@@ -94,7 +95,7 @@ async function getScores(url, env) {
   const cnt = diff === 'all'
     ? await env.DB.prepare('SELECT COUNT(DISTINCT cid) AS n FROM scores').first()
     : await env.DB.prepare('SELECT COUNT(*) AS n FROM scores WHERE diff = ?').bind(diff).first();
-  return json({ ok: true, diff, top, mine, count: cnt ? cnt.n : 0 });
+  return json({ ok: true, diff, offset, top, mine, count: cnt ? cnt.n : 0 });
 }
 
 async function postScore(request, env) {

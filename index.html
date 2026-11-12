@@ -164,6 +164,14 @@
   .rowbtns{display:flex;gap:10px;margin-top:12px}
   .rowbtns .btn{flex:1}
   .rec-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 12px}
+  /* рекорды: шапка и кнопки на месте, прокручивается только список */
+  .panel.records{display:flex;flex-direction:column;overflow:hidden}
+  .panel.records > *{flex:0 0 auto}
+  .panel.records #rec-table{flex:1 1 auto;min-height:150px;overflow-y:auto;overscroll-behavior:contain;
+    margin:6px -6px 12px;padding:0 6px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.22) transparent}
+  .btn.more{margin:10px 0 6px;padding:11px;font-size:13px;letter-spacing:1px;background:rgba(255,255,255,.06);
+    color:#c9cfd9;border:1px solid var(--line)}
+  .btn.more:disabled{opacity:.6;cursor:default}
   .rec-tabs .seg button{padding:6px 10px}
   @media(max-width:520px){
     .panel.hero .hero-in{padding:18px 16px 18px;min-height:min(78vh,600px)}

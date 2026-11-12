@@ -144,9 +144,10 @@ const STORE = (function () {
       })().finally(() => { syncing = null; });
       return syncing;
     },
-    /* общий топ уровня (diff = easy|normal|hard|extreme|all) + место самого игрока */
-    globalTop(diff) {
-      return api('/scores?diff=' + encodeURIComponent(diff || 'all') + '&me=' + encodeURIComponent(cid()), { method: 'GET' });
+    /* общий топ уровня (diff = easy|normal|hard|extreme|all), 20 строк с offset + место самого игрока */
+    globalTop(diff, offset) {
+      return api('/scores?diff=' + encodeURIComponent(diff || 'all') + '&me=' + encodeURIComponent(cid()) +
+        (offset ? '&offset=' + Math.max(0, offset | 0) : ''), { method: 'GET' });
     },
     get name() { return cleanName(readRaw().name, ''); },
     set name(v) {

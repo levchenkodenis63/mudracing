@@ -80,8 +80,9 @@
   // уровни: новички / любители / профи / абсолют (лучшее на любом уровне, с пометкой уровня)
   const REC = { tab: 'local', diff: null, req: 0 };
   const LEVELS = [['easy', 'Новички'], ['normal', 'Любители'], ['hard', 'Профи'], ['extreme', 'Экстрим'], ['all', 'Абсолют']];
-  function recRows(list, freshTs, showLevel) {
+  function recRows(list, freshTs, showLevel, start) {
     return list.map((r, i) => {
+      i += start || 0;
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
       const cls = ['top1', 'top2', 'top3'][i] || '';
       const isFresh = !!freshTs && r.ts === freshTs;
@@ -143,7 +144,7 @@
         ${global ? '' : '<button class="btn" id="btn-rec-clear">ОЧИСТИТЬ</button>'}
         <button class="btn primary" id="btn-rec-back">НАЗАД</button>
       </div>
-    `);
+    `, 'records');
     ov.querySelectorAll('[data-rec] button').forEach((b) => b.addEventListener('click', () =>
       recordsScreen(b.parentNode.dataset.rec === 'tab' ? { tab: b.dataset.v } : { diff: b.dataset.v })));
     document.getElementById('btn-rec-back').addEventListener('click', () => { REC.req++; hide(); menu(); });
@@ -154,27 +155,51 @@
     });
 
     if (global) {
-      // сначала досылаем свой лучший результат (если ещё не там), потом читаем таблицу
-      STORE.syncBest().then(() => STORE.globalTop(diff)).then((res) => {
-        if (req !== REC.req || G.screen !== 'records') return;   // пользователь уже ушёл с экрана
+      // общая таблица грузится страницами по 20 строк: «Показать ещё» внизу списка
+      const rows = [];
+      let mine = null, count = 0;
+      const render = () => {
         const tbl = document.getElementById('rec-table'); if (!tbl) return;
-        if (!res.ok) {
-          tbl.innerHTML = `<div class="empty">Не удалось загрузить общую таблицу${res.error === 'timeout' ? ' (сервер не ответил)' : ''}.<br>Проверь интернет и попробуй ещё раз.</div>`;
-          return;
+        let html = recRows(rows, null, abs) || `<div class="empty">${abs ? 'Пока никто не записал результат.' : 'На этом уровне ещё никто не записал результат.'}<br>Будь первым!</div>`;
+        if (rows.length < count) html += `<button class="btn more" id="btn-rec-more">ПОКАЗАТЬ ЕЩЁ · ${rows.length} из ${count}</button>`;
+        if (mine && !rows.some((r) => r.me)) {
+          html += `<div class="rec-row fresh"><span class="pl">${mine.rank}</span>
+            <span class="who"><b>${escHtml(mine.n)}</b><span class="badge">это ты</span>
+              <span class="meta">твоё место${abs && mine.d ? ' · ' + escHtml(DIFFNAME[mine.d] || '') : ''}</span></span>
+            <span class="tm">${Number(mine.t).toFixed(2)}</span></div>`;
         }
-        let html = recRows(res.top, null, abs) || `<div class="empty">${abs ? 'Пока никто не записал результат.' : 'На этом уровне ещё никто не записал результат.'}<br>Будь первым!</div>`;
-        if (res.mine) {
-          html += `<div class="rec-row fresh"><span class="pl">${res.mine.rank}</span>
-            <span class="who"><b>${escHtml(res.mine.n)}</b><span class="badge">это ты</span>
-              <span class="meta">твоё место${abs && res.mine.d ? ' · ' + escHtml(DIFFNAME[res.mine.d] || '') : ''}</span></span>
-            <span class="tm">${Number(res.mine.t).toFixed(2)}</span></div>`;
-        }
+        const keep = tbl.scrollTop;
         tbl.innerHTML = html;
-        const sb = document.getElementById('rec-sub');
-        if (sb) sb.textContent = `лучший результат каждого игрока · игроков: ${res.count}`;
-        const k = document.getElementById('rec-kicker');
-        if (k && res.top.length) k.textContent = 'общая таблица · ' + lvl + ' · рекорд ' + Number(res.top[0].t).toFixed(2);
-      });
+        tbl.scrollTop = keep;
+        const more = document.getElementById('btn-rec-more');
+        if (more) more.addEventListener('click', () => {
+          more.disabled = true; more.textContent = 'ЗАГРУЖАЮ…';
+          load(rows.length);
+        });
+      };
+      const load = (offset) => {
+        const p = offset ? STORE.globalTop(diff, offset) : STORE.syncBest().then(() => STORE.globalTop(diff));
+        return p.then((res) => {
+          if (req !== REC.req || G.screen !== 'records') return;   // пользователь уже ушёл с экрана
+          const tbl = document.getElementById('rec-table'); if (!tbl) return;
+          if (!res.ok) {
+            if (offset) { const more = document.getElementById('btn-rec-more'); if (more) { more.disabled = false; more.textContent = 'НЕ ЗАГРУЗИЛОСЬ · ЕЩЁ РАЗ'; } return; }
+            tbl.innerHTML = `<div class="empty">Не удалось загрузить общую таблицу${res.error === 'timeout' ? ' (сервер не ответил)' : ''}.<br>Проверь интернет и попробуй ещё раз.</div>`;
+            return;
+          }
+          if (offset && res.offset !== offset) { count = rows.length; render(); return; }   // сервер без страниц
+          rows.length = offset;                 // страница встаёт ровно на своё место
+          rows.push(...res.top);
+          count = res.count;
+          mine = res.mine || (rows.some((r) => r.me) ? null : mine);
+          render();
+          const sb = document.getElementById('rec-sub');
+          if (sb) sb.textContent = `лучший результат каждого игрока · игроков: ${res.count}`;
+          const k = document.getElementById('rec-kicker');
+          if (k && rows.length) k.textContent = 'общая таблица · ' + lvl + ' · рекорд ' + Number(rows[0].t).toFixed(2);
+        });
+      };
+      load(0);
     }
   }
 

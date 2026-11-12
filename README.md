@@ -96,8 +96,9 @@ npx wrangler deploy                      # выдаст адрес https://mudra
 
 ### API
 
-- `GET /scores?diff=<easy|normal|hard|extreme|all>&me=<cid>` — топ-20 уровня (или
-  абсолюта) и место игрока.
+- `GET /scores?diff=<easy|normal|hard|extreme|all>&me=<cid>&offset=<n>` — 20 строк
+  уровня (или абсолюта), начиная с `n` (по умолчанию 0), и место игрока.
+  В игре — кнопка «Показать ещё» внизу списка.
 - `POST /scores` — `{cid, name, diff, total, bestLap, place, ts}`; на уровне
   хранится лучший результат, в ответе — место на уровне и в абсолюте.
 - `DELETE /scores/<id>` с заголовком `Authorization: Bearer <ADMIN_TOKEN>` —
