@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Как установить MUD RACING на телефон</title>
+<meta name="theme-color" content="#0b0c0f">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  :root{--orange:#ff7a1f;--ink:#0b0c0f;--panel:#14161c;--line:rgba(255,255,255,.12);--txt:#eceef2;--dim:#9aa1ad}
+  *{box-sizing:border-box}
+  body{margin:0;background:#0a0b0e;color:var(--txt);font:16px/1.55 "Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:860px;margin:0 auto;padding:22px 16px 60px}
+  header{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+  header img{width:68px;height:68px;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  h1{margin:0;font:italic 900 clamp(24px,5vw,34px)/1.1 "Arial Black",Impact,sans-serif;letter-spacing:.5px}
+  h1 span{color:var(--orange)}
+  .lead{color:#c9cfd9;margin:14px 0 18px}
+  .lead b{color:#fff}
+  .open{display:inline-block;background:linear-gradient(180deg,#ffa14d,#ff7a1f 45%,#e35f0c);color:#1a0d02;font-weight:900;
+    letter-spacing:1px;text-decoration:none;padding:12px 18px;border-radius:12px;margin:2px 0 22px}
+  .tabs{display:flex;gap:6px;background:#0c0e12;border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:22px}
+  .tabs button{flex:1;background:none;border:0;color:#aeb4bf;font:inherit;font-weight:800;padding:10px;border-radius:9px;cursor:pointer}
+  .tabs button.on{background:linear-gradient(180deg,#2c303a,#1c2027);color:#fff}
+  .os{display:none}.os.on{display:block}
+  h2{font-size:21px;margin:26px 0 4px}
+  .ver{color:var(--dim);font-size:14px;margin:0 0 14px}
+  .steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .step .n{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--orange);color:#1a0d02;font-weight:900;
+    align-items:center;justify-content:center;font-size:14px;margin-right:8px;flex:none}
+  .step p{margin:0;display:flex;align-items:flex-start;font-size:15px}
+  .step p b{color:#fff}
+  .step svg{width:100%;height:auto;display:block}
+  .note{background:rgba(255,122,31,.08);border:1px solid rgba(255,122,31,.35);border-radius:12px;padding:12px 14px;margin:16px 0;font-size:15px;color:#e7e2dc}
+  .note b{color:#fff}
+  .faq h3{font-size:16px;margin:18px 0 4px;color:#fff}
+  .faq p{margin:0;color:#c9cfd9;font-size:15px}
+  footer{margin-top:34px;color:var(--dim);font-size:13px;text-align:center}
+  footer a{color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="icons/icon-192.png" alt="">
+    <h1>MUD<span>RACING</span><br>на телефон</h1>
+  </header>
+  <p class="lead">Игру можно поставить на телефон как обычное приложение: <b>иконка на экране, запуск на весь экран
+    и игра без интернета</b>. Магазин приложений не нужен — всё ставится прямо из браузера, это занимает полминуты.</p>
+  <a class="open" href="./">ОТКРЫТЬ ИГРУ</a>
+
+  <div class="tabs" role="tablist">
+    <button data-os="ios">iPhone · iPad</button>
+    <button data-os="android">Android</button>
+  </div>
+
+  <!-- ================= iPhone ================= -->
+  <section class="os" id="ios">
+    <div class="note">Открой игру именно в <b>Safari</b> — ссылка из мессенджера может открыться во встроенном браузере.
+      В таком случае нажми «Открыть в Safari» или скопируй ссылку в Safari.</div>
+
+    <h2>iOS 26 и новее</h2>
+    <p class="ver">Кнопка «Поделиться» спрятана в меню «•••».</p>
+    <div class="steps">
+      <div class="step"><p><span class="n">1</span><span>Открой игру в Safari и нажми <b>«•••»</b> в адресной строке внизу.</span></p><div data-pic="ios26-1"></div></div>
+      <div class="step"><p><span class="n">2</span><span>В меню выбери <b>«Поделиться»</b>.</span></p><div data-pic="ios26-2"></div></div>
+      <div class="step"><p><span class="n">3</span><span>Пролистай вниз и нажми <b>«На экран „Домой“»</b>.</span></p><div data-pic="ios-share"></div></div>
+      <div class="step"><p><span class="n">4</span><span>Оставь включённым <b>«Открыть как веб-приложение»</b> и нажми <b>«Добавить»</b>.</span></p><div data-pic="ios-add"></div></div>
+      <div class="step"><p><span class="n">5</span><span>Готово: на экране появилась иконка <b>MUD RACING</b>. Запускай игру с неё.</span></p><div data-pic="home"></div></div>
+    </div>
+
+    <h2>iOS 18 и старше</h2>
+    <p class="ver">Кнопка «Поделиться» — прямо в нижней панели Safari.</p>
+    <div class="steps">
+      <div class="step"><p><span class="n">1</span><span>Открой игру в Safari и нажми <b>«Поделиться»</b> — квадрат со стрелкой вверх.</span></p><div data-pic="ios18-1"></div></div>
+      <div class="step"><p><span class="n">2</span><span>Пролистай вниз и нажми <b>«На экран „Домой“»</b>.</span></p><div data-pic="ios-share"></div></div>
+      <div class="step"><p><span class="n">3</span><span>Нажми <b>«Добавить»</b> в правом верхнем углу — иконка появится на экране «Домой».</span></p><div data-pic="ios-add-old"></div></div>
+    </div>
+    <div class="note">Нет пункта «На экран „Домой“»? Пролистай список действий до конца, нажми <b>«Редактировать действия»</b> и добавь его.</div>
+  </section>
+
+  <!-- ================= Android ================= -->
+  <section class="os" id="android">
+    <h2>Chrome — проще всего</h2>
+    <p class="ver">Кнопка установки есть прямо в игре.</p>
+    <div class="steps">
+      <div class="step"><p><span class="n">1</span><span>Открой игру в Chrome. Под кнопками меню нажми <b>«📲 Установить игру как приложение»</b>.</span></p><div data-pic="and-1"></div></div>
+      <div class="step"><p><span class="n">2</span><span>В окошке нажми <b>«Установить»</b>.</span></p><div data-pic="and-2"></div></div>
+      <div class="step"><p><span class="n">3</span><span>Готово: иконка <b>MUD RACING</b> появилась на рабочем столе.</span></p><div data-pic="home-and"></div></div>
+    </div>
+
+    <h2>Если кнопки в игре нет</h2>
+    <p class="ver">Например, в другом браузере или если окошко уже закрывали.</p>
+    <div class="steps">
+      <div class="step"><p><span class="n">1</span><span>В Chrome нажми <b>⋮</b> справа вверху и выбери <b>«Добавить на гл. экран»</b> или <b>«Установить приложение»</b>.</span></p><div data-pic="and-menu"></div></div>
+      <div class="step"><p><span class="n">2</span><span>Подтверди <b>«Установить»</b>. В Samsung Internet: меню <b>≡</b> → <b>«Добавить страницу на»</b> → <b>«Главный экран»</b>.</span></p><div data-pic="and-2"></div></div>
+    </div>
+  </section>
+
+  <section class="faq">
+    <h2>Вопросы</h2>
+    <h3>Как обновить игру?</h3>
+    <p>Само. Открой игру при включённом интернете — новая версия подтянется. Если не видно изменений, закрой игру
+      полностью (смахни из списка открытых приложений) и запусти снова.</p>
+    <h3>Работает без интернета?</h3>
+    <p>Да, после первого запуска. Без сети не загрузится только общая таблица «Все игроки» — твои результаты
+      отправятся в неё позже сами.</p>
+    <h3>Куда делись мои рекорды?</h3>
+    <p>Рекорды «Мои» хранятся отдельно в каждом браузере. На iPhone у установленной игры своё хранилище, не такое, как у
+      Safari, поэтому там таблица «Мои» начнётся заново. Лучшие результаты, уже попавшие в «Все игроки», никуда не денутся.</p>
+    <h3>Как удалить?</h3>
+    <p>Как любое приложение: долгое нажатие на иконку → «Удалить».</p>
+  </section>
+
+  <footer><a href="./">MUD RACING</a> · квадроспорт, гонки с водными препятствиями</footer>
+</div>
+
+<script>
+/* ---------- макеты экранов (SVG) ---------- */
+const O = '#ff7a1f';
+const ICON = 'icons/icon-192.png';
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+// телефон 240×430, экран внутри: x 12..228, y 12..418
+const phone = (inner, light) => `<svg viewBox="0 0 240 430" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+  <rect x="2" y="2" width="236" height="426" rx="34" fill="#22252c" stroke="#3a3e48" stroke-width="2"/>
+  <rect x="12" y="12" width="216" height="406" rx="26" fill="${light ? '#f2f2f7' : '#0f1115'}"/>
+  <clipPath id="c${++phone.n}"><rect x="12" y="12" width="216" height="406" rx="26"/></clipPath>
+  <g clip-path="url(#c${phone.n})">${inner}</g>
+  <rect x="92" y="18" width="56" height="15" rx="7.5" fill="#000"/></svg>`;
+phone.n = 0;
+const tap = (x, y) => `<circle cx="${x}" cy="${y}" r="17" fill="none" stroke="${O}" stroke-width="3"/>
+  <circle cx="${x}" cy="${y}" r="24" fill="none" stroke="${O}" stroke-opacity=".35" stroke-width="2"/>`;
+const hl = (x, y, w, h, r) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r || 8}" fill="none" stroke="${O}" stroke-width="3"/>`;
+const txt = (x, y, s, size, col, w, anchor) => `<text x="${x}" y="${y}" font-size="${size}" fill="${col}" font-weight="${w || 400}" text-anchor="${anchor || 'start'}">${esc(s)}</text>`;
+// фон «страница игры» в браузере (упрощённое меню)
+const game = (y0) => `<rect x="12" y="${y0}" width="216" height="${418 - y0}" fill="#14161c"/>
+  <rect x="26" y="${y0 + 24}" width="188" height="200" rx="12" fill="#1c1f27" stroke="#2c303a"/>
+  <text x="40" y="${y0 + 58}" font-size="21" font-weight="900" font-style="italic" fill="#fff" font-family="Arial Black,Impact,sans-serif">MUD<tspan fill="${O}">RACING</tspan></text>
+  <rect x="40" y="${y0 + 74}" width="160" height="9" rx="4" fill="#2c303a"/><rect x="40" y="${y0 + 90}" width="130" height="9" rx="4" fill="#2c303a"/>
+  <rect x="40" y="${y0 + 112}" width="160" height="24" rx="7" fill="#0c0e12" stroke="#2c303a"/>
+  <rect x="40" y="${y0 + 150}" width="76" height="30" rx="8" fill="#2a2e37"/><rect x="124" y="${y0 + 150}" width="76" height="30" rx="8" fill="${O}"/>`;
+// нижняя панель Safari
+const safari18 = () => `${game(40)}
+  <rect x="12" y="330" width="216" height="88" fill="#f7f7f9"/>
+  <rect x="24" y="338" width="192" height="30" rx="10" fill="#e6e6eb"/>${txt(120, 358, 'levchenkodenis63.github.io', 10, '#333', 500, 'middle')}
+  <g fill="none" stroke="#0a7cff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M38 392 l-7 7 7 7"/><path d="M72 392 l7 7 -7 7"/>
+    <path d="M114 391 v14 M108 397 l6 -6 6 6"/><rect x="106" y="397" width="16" height="16" rx="2" stroke-dasharray="0" />
+    <path d="M150 393 a7 7 0 1 0 0.1 0"/><rect x="190" y="392" width="16" height="16" rx="3"/></g>`;
+const safari26 = () => `${game(40)}
+  <rect x="22" y="368" width="196" height="38" rx="19" fill="#fff" stroke="#d6d6dc"/>
+  <g fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round"><path d="M40 381 l-6 6 6 6"/></g>
+  ${txt(116, 392, 'levchenkodenis63.github.io', 10, '#333', 500, 'middle')}
+  <g fill="#111"><circle cx="190" cy="387" r="2.3"/><circle cx="198" cy="387" r="2.3"/><circle cx="206" cy="387" r="2.3"/></g>`;
+const sheet = (title, rows, hi) => {
+  let s = `<rect x="12" y="150" width="216" height="268" rx="18" fill="#f2f2f7"/>
+    <rect x="104" y="157" width="32" height="4" rx="2" fill="#c7c7cc"/>
+    <image href="${ICON}" x="26" y="170" width="36" height="36"/>${txt(72, 185, 'MUD RACING', 12, '#111', 700)}${txt(72, 200, 'levchenkodenis63.github.io', 9.5, '#8e8e93')}`;
+  rows.forEach((r, i) => {
+    const y = 222 + i * 36;
+    s += `<rect x="24" y="${y}" width="192" height="32" rx="9" fill="#fff"/>${txt(36, y + 21, r[0], 11.5, '#111', i === hi ? 700 : 400)}${txt(204, y + 21, r[1], 13, '#444', 400, 'end')}`;
+    if (i === hi) s += hl(22, y - 2, 196, 36, 10);
+  });
+  return s;
+};
+const addDlg = (toggle) => `<rect x="12" y="12" width="216" height="406" fill="#f2f2f7"/>
+  ${txt(22, 62, 'Отменить', 10, '#0a7cff')}${txt(120, 62, 'На экран «Домой»', 10, '#111', 700, 'middle')}${txt(218, 62, 'Добавить', 10, '#0a7cff', 700, 'end')}
+  ${hl(164, 47, 60, 22, 7)}
+  <rect x="24" y="86" width="192" height="74" rx="12" fill="#fff"/>
+  <image href="${ICON}" x="36" y="96" width="54" height="54"/>
+  ${txt(102, 116, 'MUD RACING', 12.5, '#111', 600)}<line x1="102" y1="124" x2="204" y2="124" stroke="#e5e5ea"/>${txt(102, 142, 'levchenkodenis63.github.io', 9, '#8e8e93')}
+  ${toggle ? `<rect x="24" y="174" width="192" height="40" rx="12" fill="#fff"/>${txt(34, 198, 'Открыть как веб-приложение', 9.5, '#111')}
+    <rect x="182" y="184" width="28" height="18" rx="9" fill="#34c759"/><circle cx="201" cy="193" r="7.5" fill="#fff"/>` : ''}
+  ${txt(30, toggle ? 238 : 186, 'Значок будет добавлен на экран', 9.5, '#8e8e93')}${txt(30, toggle ? 251 : 199, '«Домой» для быстрого доступа.', 9.5, '#8e8e93')}`;
+const homeGrid = (bg) => {
+  const id = 'w' + (++phone.n);
+  let s = `<rect x="12" y="12" width="216" height="406" fill="url(#${id})"/>
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${bg[0]}"/><stop offset="1" stop-color="${bg[1]}"/></linearGradient></defs>`;
+  const cols = [30, 80, 130, 180];
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+    const x = cols[c], y = 56 + r * 66;
+    if (r === 2 && c === 1) {
+      s += `<clipPath id="${id}i"><rect x="${x}" y="${y}" width="40" height="40" rx="10"/></clipPath><image href="${ICON}" x="${x}" y="${y}" width="40" height="40" clip-path="url(#${id}i)"/>${txt(x + 20, y + 52, 'MUD RACING', 7.5, '#fff', 600, 'middle')}`;
+      s += hl(x - 9, y - 7, 58, 66, 14);
+    } else s += `<rect x="${x}" y="${y}" width="40" height="40" rx="10" fill="rgba(255,255,255,${0.16 + ((r * 4 + c) % 3) * 0.06})"/><rect x="${x + 6}" y="${y + 47}" width="28" height="5" rx="2.5" fill="rgba(255,255,255,.35)"/>`;
+  }
+  return s + `<rect x="24" y="352" width="192" height="54" rx="20" fill="rgba(255,255,255,.18)"/>` +
+    [40, 88, 136, 184].map((x) => `<rect x="${x - 2}" y="361" width="36" height="36" rx="9" fill="rgba(255,255,255,.28)"/>`).join('');
+};
+const androidChrome = (menu) => `${game(66)}
+  <rect x="12" y="12" width="216" height="54" fill="#202124"/>
+  <rect x="24" y="38" width="164" height="24" rx="12" fill="#303134"/>${txt(36, 54, 'levchenkodenis63.github.io', 9.5, '#e8eaed')}
+  <g fill="#e8eaed"><circle cx="208" cy="43" r="2.2"/><circle cx="208" cy="50" r="2.2"/><circle cx="208" cy="57" r="2.2"/></g>
+  ${menu ? `<rect x="70" y="68" width="152" height="196" rx="10" fill="#2d2e31"/>` +
+    ['Новая вкладка', 'История', 'Скачанные файлы', 'Закладки', 'Добавить на гл. экран', 'Настройки'].map((t, i) =>
+      txt(84, 94 + i * 30, t, 10, '#e8eaed', i === 4 ? 700 : 400)).join('') + hl(74, 196, 144, 28, 7) + tap(208, 50) : ''}`;
+const PICS = {
+  'ios26-1': () => phone(safari26() + tap(198, 387), true),
+  'ios26-2': () => phone(safari26() + `<rect x="96" y="214" width="120" height="146" rx="14" fill="#fff" stroke="#d6d6dc"/>` +
+    ['Поделиться', 'Добавить закладку', 'Найти на странице', 'Режим чтения'].map((t, i) => txt(110, 240 + i * 34, t, 10.5, '#111', i ? 400 : 700)).join('') +
+    hl(100, 222, 112, 28, 8), true),
+  'ios18-1': () => phone(safari18() + tap(114, 401), true),
+  'ios-share': () => phone(game(40) + `<rect x="12" y="12" width="216" height="406" fill="rgba(0,0,0,.35)"/>` +
+    sheet('', [['Скопировать', '⧉'], ['Добавить в Избранное', '☆'], ['Найти на странице', '⌕'], ['На экран «Домой»', '⊞'], ['Разметка', '✎']], 3), true),
+  'ios-add': () => phone(addDlg(true), true),
+  'ios-add-old': () => phone(addDlg(false), true),
+  'home': () => phone(homeGrid(['#3b5a86', '#7a4b6e'])),
+  'home-and': () => phone(homeGrid(['#1f3b3a', '#3e5b2e'])),
+  'and-1': () => phone(`${game(66)}<rect x="12" y="12" width="216" height="54" fill="#202124"/>
+    <rect x="24" y="38" width="164" height="24" rx="12" fill="#303134"/>${txt(36, 54, 'levchenkodenis63.github.io', 9.5, '#e8eaed')}
+    <text x="120" y="282" font-size="9.5" fill="#c9cfd9" text-anchor="middle" text-decoration="underline">📲 Установить игру как приложение</text>
+    ${hl(22, 266, 196, 24, 8)}`),
+  'and-2': () => phone(`${game(66)}<rect x="12" y="12" width="216" height="54" fill="#202124"/>
+    <rect x="12" y="12" width="216" height="406" fill="rgba(0,0,0,.5)"/>
+    <rect x="26" y="150" width="188" height="150" rx="18" fill="#2d2e31"/>
+    ${txt(44, 180, 'Установить приложение?', 12.5, '#e8eaed', 700)}
+    <image href="${ICON}" x="44" y="196" width="38" height="38"/>${txt(92, 212, 'MUD RACING', 11.5, '#e8eaed', 600)}${txt(92, 227, 'levchenkodenis63.github.io', 8.5, '#9aa0a6')}
+    ${txt(126, 280, 'Отмена', 11, '#8ab4f8', 600, 'end')}${txt(202, 280, 'Установить', 11, '#8ab4f8', 700, 'end')}
+    ${hl(136, 263, 72, 26, 8)}`),
+  'and-menu': () => phone(androidChrome(true))
+};
+document.querySelectorAll('[data-pic]').forEach((el) => { el.innerHTML = PICS[el.dataset.pic](); });
+
+/* ---------- вкладки: сразу открываем нужную систему ---------- */
+const ua = navigator.userAgent;
+const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const pick = (os) => {
+  document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.os === os));
+  document.querySelectorAll('.os').forEach((s) => s.classList.toggle('on', s.id === os));
+};
+document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => pick(b.dataset.os)));
+pick(location.hash === '#android' ? 'android' : location.hash === '#ios' ? 'ios' : (/Android/.test(ua) ? 'android' : isIOS ? 'ios' : 'ios'));
+</script>
+</body>
+</html>

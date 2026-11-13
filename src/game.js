@@ -284,7 +284,8 @@
         ev.userChoice.finally(() => { installEvt = null; installLine(); });
       } else {
         el.innerHTML = '<div class="insthint">В <b>Safari</b> нажми «Поделиться» <span class="ico">⬆︎</span> внизу экрана → ' +
-          '<b>«На экран „Домой“»</b>. Игра появится иконкой и будет открываться на весь экран, даже без интернета.</div>';
+          '<b>«На экран „Домой“»</b>. Игра появится иконкой и будет открываться на весь экран, даже без интернета.' +
+          ' <a href="install.html#ios" target="_blank">Инструкция с картинками →</a></div>';
       }
     });
   }

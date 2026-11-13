@@ -2,9 +2,9 @@
    Сначала сеть (чтобы сразу получать новые версии), без сети — из кэша.
    Запросы к серверу рекордов (другой домен) не трогаем: ими управляет store.js.
    VERSION подставляет build.py — новая сборка = новый кэш. */
-const VERSION = 'e9f7de2c19';
+const VERSION = '69528bbae0';
 const CACHE = 'mudracing-' + VERSION;
-const FILES = ['./', './index.html', './manifest.webmanifest',
+const FILES = ['./', './index.html', './install.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
   './icons/apple-touch-icon.png', './icons/favicon-32.png'];
 const NET_TIMEOUT = 4000;   // плохая сеть — не ждём дольше, отдаём из кэша

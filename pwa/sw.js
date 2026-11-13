@@ -4,7 +4,7 @@
    VERSION подставляет build.py — новая сборка = новый кэш. */
 const VERSION = '__BUILD__';
 const CACHE = 'mudracing-' + VERSION;
-const FILES = ['./', './index.html', './manifest.webmanifest',
+const FILES = ['./', './index.html', './install.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
   './icons/apple-touch-icon.png', './icons/favicon-32.png'];
 const NET_TIMEOUT = 4000;   // плохая сеть — не ждём дольше, отдаём из кэша

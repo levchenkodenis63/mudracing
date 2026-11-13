@@ -42,5 +42,6 @@ os.makedirs('docs/icons', exist_ok=True)
 for f in sorted(x for x in os.listdir('pwa/icons') if x.endswith('.png')):
     shutil.copyfile(os.path.join('pwa/icons', f), os.path.join('docs/icons', f))
 shutil.copyfile('pwa/manifest.webmanifest', 'docs/manifest.webmanifest')
+shutil.copyfile('pwa/install.html', 'docs/install.html')     # инструкция по установке с картинками
 open('docs/sw.js','w',encoding='utf-8').write(open('pwa/sw.js',encoding='utf-8').read().replace('__BUILD__', build))
 print('built', len(html)//1024, 'KB')
