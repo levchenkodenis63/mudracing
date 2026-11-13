@@ -235,6 +235,7 @@
         <button class="btn" id="btn-records">РЕЗУЛЬТАТЫ</button>
         <button class="btn primary" id="btn-draw">ЖЕРЕБЬЁВКА</button>
       </div>
+      <div class="install" id="install"></div>
       <div class="keys">Газ: <kbd>↑</kbd> <kbd>W</kbd> или <kbd>Space</kbd> (удерживай) · тап/палец по экрану на телефоне · <kbd>Enter</kbd> — далее</div>
     `);
     ov.querySelectorAll('.seg').forEach((seg) => {
@@ -254,6 +255,31 @@
     });
     document.getElementById('btn-records').addEventListener('click', () => { STORE.name = nameInp.value; recordsScreen(); });
     document.getElementById('btn-draw').addEventListener('click', () => { STORE.name = nameInp.value; nameInp.value = STORE.name; newChampionship(); });
+    installLine();
+  }
+
+  /* ---------- установка как приложение (PWA, только в сборке на https) ---------- */
+  let installEvt = null;
+  addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; installLine(); });
+  addEventListener('appinstalled', () => { installEvt = null; installLine(); });
+  const standalone = () => matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone === true;
+  const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  function installLine() {
+    const el = document.getElementById('install');
+    if (!el) return;
+    const pwa = !!document.querySelector('link[rel="manifest"]') && location.protocol === 'https:';
+    if (!pwa || standalone() || (!installEvt && !isIOS())) { el.innerHTML = ''; return; }
+    el.innerHTML = `<button class="instbtn" id="btn-install">📲 ${installEvt ? 'Установить игру как приложение' : 'Как установить игру на iPhone'}</button>`;
+    document.getElementById('btn-install').addEventListener('click', () => {
+      if (installEvt) {
+        const ev = installEvt;
+        ev.prompt();
+        ev.userChoice.finally(() => { installEvt = null; installLine(); });
+      } else {
+        el.innerHTML = '<div class="insthint">В <b>Safari</b> нажми «Поделиться» <span class="ico">⬆︎</span> внизу экрана → ' +
+          '<b>«На экран „Домой“»</b>. Игра появится иконкой и будет открываться на весь экран, даже без интернета.</div>';
+      }
+    });
   }
 
   /* ---------- жеребьёвка ---------- */

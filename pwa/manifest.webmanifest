@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "MUD RACING — квадроспорт",
+  "short_name": "MUD RACING",
+  "description": "Парные заезды квадроциклов по трассе из трёх грязевых ванн.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#0a0b0e",
+  "theme_color": "#0b0c0f",
+  "categories": ["games", "sports"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

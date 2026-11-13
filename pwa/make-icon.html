@@ -1,0 +1,35 @@
+<!DOCTYPE html><html><head><!-- Генератор иконки PWA: открыть в Chrome (?m=any или ?m=maskable), сохранить canvas 1024×1024, затем уменьшить до размеров из pwa/icons/ --><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="i" width="1024" height="1024"></canvas><canvas id="q" width="2000" height="1000" style="display:none"></canvas>
+<script src="../src/core.js"></script>
+<script src="../src/render.js"></script>
+<script>
+const MODE=new URLSearchParams(location.search).get('m')||'any';   // any | maskable
+const look={ body:'#e2661c', body2:'#f2913c', accent:'#ff8a3d', rack:'#2a2a30', stripe:'#f4f1e6', jersey:'#f4f1e6', jersey2:'#e2661c', pants:'#1d1f27', helmet:'#1c1c22', helmet2:'#ff7a1f', snorkel:'#2b2b31' };
+const qc=document.getElementById('q');
+RN.debugQuad(qc, look, {bg:'rgba(0,0,0,0)', ppm:300, stand:0.6});
+const c=document.getElementById('i'), x=c.getContext('2d'), S=1024;
+// фон: ночное небо → грязь
+let g=x.createLinearGradient(0,0,0,S); g.addColorStop(0,'#1b1f27'); g.addColorStop(0.55,'#12141a'); g.addColorStop(1,'#0b0c0f');
+x.fillStyle=g; x.fillRect(0,0,S,S);
+// мягкое оранжевое свечение
+let rg=x.createRadialGradient(S*0.5,S*0.52,20,S*0.5,S*0.52,S*0.55); rg.addColorStop(0,'rgba(255,122,31,.28)'); rg.addColorStop(1,'rgba(255,122,31,0)');
+x.fillStyle=rg; x.fillRect(0,0,S,S);
+const k = MODE==='maskable' ? 0.78 : 0.92;           // maskable: всё важное в центральных 80%
+x.save(); x.translate(S/2,S/2); x.scale(k,k); x.translate(-S/2,-S/2);
+// квадроцикл
+x.drawImage(qc, 0, 0, 1200, 1000, S/2-600*0.66+150, 215, 1200*0.66, 1000*0.66);
+// вода/грязь
+const wy=625;
+x.beginPath(); x.moveTo(-200,wy);
+for(let i=-200;i<=S+200;i+=8) x.lineTo(i, wy+Math.sin(i/55)*10+Math.sin(i/23)*4);
+x.lineTo(S+200,S+300); x.lineTo(-200,S+300); x.closePath();
+let wg=x.createLinearGradient(0,wy,0,S); wg.addColorStop(0,'rgba(150,140,105,.86)'); wg.addColorStop(1,'rgba(70,58,38,1)');
+x.fillStyle=wg; x.fill();
+x.strokeStyle='rgba(244,244,232,.9)'; x.lineWidth=7; x.stroke();
+// логотип
+x.textAlign='center'; x.font='italic 900 150px "Arial Black", Impact, sans-serif';
+x.fillStyle='#fff'; x.fillText('MUD', S/2, 205);
+x.font='italic 900 120px "Arial Black", Impact, sans-serif'; x.fillStyle='#ff7a1f'; x.fillText('RACING', S/2, 900);
+x.restore();
+document.title='ok';
+</script></body></html>

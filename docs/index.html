@@ -4,6 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>MUD RACING — квадроспорт с водными препятствиями</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0c0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="MUD RACING">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+</script>
 <style>
   :root{
     --orange:#ff7a1f; --orange2:#ffa14d; --ink:#0b0c0f; --panel:#12141a;
@@ -162,6 +175,15 @@
     vertical-align:1px;font-weight:700}
   .empty{text-align:center;color:#6d7481;font-size:13px;padding:26px 10px;line-height:1.6}
   .rowbtns{display:flex;gap:10px;margin-top:12px}
+  .install{text-align:center;margin-top:10px}
+  .install:empty{display:none}
+  .instbtn{background:none;border:0;color:#9aa1ad;font:inherit;font-size:13px;cursor:pointer;padding:4px 6px;
+    text-decoration:underline;text-decoration-color:rgba(255,255,255,.22)}
+  .instbtn:hover{color:#fff}
+  .insthint{font-size:13px;line-height:1.5;color:#c9cfd9;background:rgba(255,255,255,.05);border:1px solid var(--line);
+    border-radius:10px;padding:10px 12px;text-align:left}
+  .insthint b{color:#fff}
+  .insthint .ico{display:inline-block;padding:0 5px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:11px}
   .rowbtns .btn{flex:1}
   .rec-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 12px}
   /* рекорды: шапка и кнопки на месте, прокручивается только список */
@@ -203,6 +225,12 @@
     .pair{font-size:12px}
     .grid4{gap:8px}
     #gasped{width:88px;height:88px;font-size:13px;right:12px;bottom:12px}
+    /* узкий экран: 4 уровня и 5 вкладок рекордов должны помещаться в ширину */
+    .opts .opt{flex:1 1 100%;min-width:0}
+    .opts .seg button{flex:1 1 auto;padding:8px 6px;font-size:12.5px}
+    .rec-tabs .seg{flex-wrap:wrap;max-width:100%}
+    .rec-tabs .seg button{flex:1 1 auto;padding:6px 6px;font-size:12px}
+    .rowbtns .btn{min-width:0;padding:14px 8px;letter-spacing:.6px}
   }
 </style>
 </head>
@@ -1718,6 +1746,7 @@ const RN = (function () {
         <button class="btn" id="btn-records">РЕЗУЛЬТАТЫ</button>
         <button class="btn primary" id="btn-draw">ЖЕРЕБЬЁВКА</button>
       </div>
+      <div class="install" id="install"></div>
       <div class="keys">Газ: <kbd>↑</kbd> <kbd>W</kbd> или <kbd>Space</kbd> (удерживай) · тап/палец по экрану на телефоне · <kbd>Enter</kbd> — далее</div>
     `);
     ov.querySelectorAll('.seg').forEach((seg) => {
@@ -1737,6 +1766,31 @@ const RN = (function () {
     });
     document.getElementById('btn-records').addEventListener('click', () => { STORE.name = nameInp.value; recordsScreen(); });
     document.getElementById('btn-draw').addEventListener('click', () => { STORE.name = nameInp.value; nameInp.value = STORE.name; newChampionship(); });
+    installLine();
+  }
+
+  /* ---------- установка как приложение (PWA, только в сборке на https) ---------- */
+  let installEvt = null;
+  addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; installLine(); });
+  addEventListener('appinstalled', () => { installEvt = null; installLine(); });
+  const standalone = () => matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone === true;
+  const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  function installLine() {
+    const el = document.getElementById('install');
+    if (!el) return;
+    const pwa = !!document.querySelector('link[rel="manifest"]') && location.protocol === 'https:';
+    if (!pwa || standalone() || (!installEvt && !isIOS())) { el.innerHTML = ''; return; }
+    el.innerHTML = `<button class="instbtn" id="btn-install">📲 ${installEvt ? 'Установить игру как приложение' : 'Как установить игру на iPhone'}</button>`;
+    document.getElementById('btn-install').addEventListener('click', () => {
+      if (installEvt) {
+        const ev = installEvt;
+        ev.prompt();
+        ev.userChoice.finally(() => { installEvt = null; installLine(); });
+      } else {
+        el.innerHTML = '<div class="insthint">В <b>Safari</b> нажми «Поделиться» <span class="ico">⬆︎</span> внизу экрана → ' +
+          '<b>«На экран „Домой“»</b>. Игра появится иконкой и будет открываться на весь экран, даже без интернета.</div>';
+      }
+    });
   }
 
   /* ---------- жеребьёвка ---------- */

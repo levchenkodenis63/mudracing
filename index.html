@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>MUD RACING — квадроспорт</title>
+<!--pwa: build.py вставляет сюда манифест, иконки и регистрацию service worker-->
 <style>
   :root{
     --orange:#ff7a1f; --orange2:#ffa14d; --ink:#0b0c0f; --panel:#12141a;
@@ -162,6 +163,15 @@
     vertical-align:1px;font-weight:700}
   .empty{text-align:center;color:#6d7481;font-size:13px;padding:26px 10px;line-height:1.6}
   .rowbtns{display:flex;gap:10px;margin-top:12px}
+  .install{text-align:center;margin-top:10px}
+  .install:empty{display:none}
+  .instbtn{background:none;border:0;color:#9aa1ad;font:inherit;font-size:13px;cursor:pointer;padding:4px 6px;
+    text-decoration:underline;text-decoration-color:rgba(255,255,255,.22)}
+  .instbtn:hover{color:#fff}
+  .insthint{font-size:13px;line-height:1.5;color:#c9cfd9;background:rgba(255,255,255,.05);border:1px solid var(--line);
+    border-radius:10px;padding:10px 12px;text-align:left}
+  .insthint b{color:#fff}
+  .insthint .ico{display:inline-block;padding:0 5px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:11px}
   .rowbtns .btn{flex:1}
   .rec-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 12px}
   /* рекорды: шапка и кнопки на месте, прокручивается только список */
@@ -203,6 +213,12 @@
     .pair{font-size:12px}
     .grid4{gap:8px}
     #gasped{width:88px;height:88px;font-size:13px;right:12px;bottom:12px}
+    /* узкий экран: 4 уровня и 5 вкладок рекордов должны помещаться в ширину */
+    .opts .opt{flex:1 1 100%;min-width:0}
+    .opts .seg button{flex:1 1 auto;padding:8px 6px;font-size:12.5px}
+    .rec-tabs .seg{flex-wrap:wrap;max-width:100%}
+    .rec-tabs .seg button{flex:1 1 auto;padding:6px 6px;font-size:12px}
+    .rowbtns .btn{min-width:0;padding:14px 8px;letter-spacing:.6px}
   }
 </style>
 </head>
