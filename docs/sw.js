@@ -2,7 +2,7 @@
    Сначала сеть (чтобы сразу получать новые версии), без сети — из кэша.
    Запросы к серверу рекордов (другой домен) не трогаем: ими управляет store.js.
    VERSION подставляет build.py — новая сборка = новый кэш. */
-const VERSION = '1e0f2d0636';
+const VERSION = '354cac95f7';
 const CACHE = 'mudracing-' + VERSION;
 const FILES = ['./', './index.html', './install.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
@@ -25,8 +25,11 @@ self.addEventListener('fetch', (e) => {
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
     try {
+      // no-cache: перепроверить на сервере, а не брать копию из HTTP-кэша
+      // (GitHub Pages отдаёт max-age=600 — иначе до 10 минут приходила бы старая версия).
+      // Навигационный запрос нельзя пересоздать с параметрами — для него берём url.
       const res = await Promise.race([
-        fetch(req),
+        fetch(req.mode === 'navigate' ? req.url : req, { cache: 'no-cache' }),
         new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), NET_TIMEOUT))
       ]);
       if (res && res.ok) cache.put(req, res.clone());

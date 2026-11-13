@@ -25,8 +25,11 @@ self.addEventListener('fetch', (e) => {
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
     try {
+      // no-cache: перепроверить на сервере, а не брать копию из HTTP-кэша
+      // (GitHub Pages отдаёт max-age=600 — иначе до 10 минут приходила бы старая версия).
+      // Навигационный запрос нельзя пересоздать с параметрами — для него берём url.
       const res = await Promise.race([
-        fetch(req),
+        fetch(req.mode === 'navigate' ? req.url : req, { cache: 'no-cache' }),
         new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), NET_TIMEOUT))
       ]);
       if (res && res.ok) cache.put(req, res.clone());

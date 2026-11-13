@@ -212,6 +212,7 @@
 
   /* ---------- меню ---------- */
   function menu() {
+    if (window.__mrUpdate && window.__mrReload) { window.__mrReload(); return; }   // вышла новая версия (PWA)
     G.screen = 'menu'; G.lights = 0;
     STORE.syncBest();   // дослать лучший результат, если раньше не было связи или сменилось имя
     G.track = MR.makeTrack(1);

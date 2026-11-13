@@ -32,7 +32,23 @@ PWA_HEAD = """<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <script>
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  // обновление: на iPhone установленная игра часто не перезагружается, а разворачивается из памяти,
+  // поэтому при каждом возврате в игру проверяем новую версию; перезагрузка — только в меню
+  var hadCtl = !!navigator.serviceWorker.controller, reloading = false;
+  window.__mrUpdate = false;
+  window.__mrReload = function () { if (!reloading) { reloading = true; location.reload(); } };
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (!hadCtl) { hadCtl = true; return; }            // первая установка — перезагружать незачем
+    var G = window.__MRG;
+    if (!G || G.screen === 'menu') window.__mrReload(); else window.__mrUpdate = true;
+  });
+  addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').then(function (reg) {
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') reg.update().catch(function () {});
+      });
+    }).catch(function () {});
+  });
 }
 </script>"""
 html=html.replace('<!--pwa: build.py вставляет сюда манифест, иконки и регистрацию service worker-->', PWA_HEAD)
