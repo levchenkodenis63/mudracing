@@ -298,6 +298,10 @@ const MR = (function () {
     DROWN: 2.0,     // мотор стоит в воде столько — квадроцикл тонет, с
     SINK_P: 0.10    // шанс бота утонуть в заезде: SINK_P × (1.15 − skill)
   };
+  // ширина зелёной зоны игрока по уровням: на столько зона шире с каждой стороны.
+  // Максимум тяги — на верхней границе зоны, поэтому лучшее возможное время от уровня не зависит:
+  // широкая зона только прощает ошибки (реже перелив, пробуксовка и перегрев).
+  const ZW = { easy: 0.08, normal: 0.04, hard: 0, extreme: 0 };
 
   /* ---------- Трасса ---------- */
   function makeTrack(seed) {
@@ -386,9 +390,10 @@ const MR = (function () {
     for (let i = 0; i < 3; i++) { const b = track.baths[i]; if (b.x0 >= x) return b.x0 - x; }
     return 1e9;
   }
-  function zone(d) {
-    if (d <= 0.02) return [0.55, 1.0];
-    return [lerp(0.52, 0.36, d), lerp(0.88, 0.60, d)];
+  function zone(d, w) {
+    w = w || 0;
+    if (d <= 0.02) return [Math.max(C.IDLE + 0.05, 0.55 - w), 1.0];
+    return [Math.max(C.IDLE + 0.05, lerp(0.52, 0.36, d) - w), Math.min(1, lerp(0.88, 0.60, d) + w)];
   }
 
   /* ---------- Гонщик / физика ---------- */
@@ -399,7 +404,8 @@ const MR = (function () {
       lo: 0.55, hi: 1, d: 0, depth: 0, spin: false, float: false,
       wheel: 0, pitch: 0, entered: [false, false, false], ev: [],
       top: 0, react: null, clean: 0, floods: 0, heats: 0, gas: false,
-      extreme: false, dead: false, deadT: 0, prevGas: false, drowned: false, sinkT: 0
+      extreme: false, dead: false, deadT: 0, prevGas: false, drowned: false, sinkT: 0,
+      zw: 0                                    // поправка ширины зелёной зоны (уровень игрока)
     };
   }
 
@@ -432,7 +438,7 @@ const MR = (function () {
     } else if (r.cut > 0) { r.cut -= dt; gas = false; }
     if (r.fin) gas = false;
     r.gas = gas;
-    const z = zone(d), lo = z[0], hi = z[1];
+    const z = zone(d, r.zw), lo = z[0], hi = z[1];
     r.lo = lo; r.hi = hi;
 
     if (gas) r.rpm += (r.air ? 1.5 : 0.9) * dt; else r.rpm -= 0.8 * dt;
@@ -508,7 +514,7 @@ const MR = (function () {
       const dep = depthAt(track, l, r.x);
       if (dep > 0.1) {
         r.entered[bi] = true;
-        const zz = zone(clamp(dep / C.FLOAT, 0, 1));
+        const zz = zone(clamp(dep / C.FLOAT, 0, 1), r.zw);
         let kind;
         if (r.rpm > zz[1] + 0.02) { kind = 'flood'; r.v *= 0.74; r.heat = Math.min(0.97, r.heat + 0.12); r.floods++; }
         else if (r.rpm >= zz[0] - 0.06) { kind = 'clean'; r.v *= 0.94; r.clean++; }
@@ -624,7 +630,7 @@ const MR = (function () {
     return series;
   }
 
-  return { C, clamp, lerp, smooth, rng, makeTrack, hAt, bathAt, depthAt, groundAt, nextBathDist, zone,
+  return { C, ZW, clamp, lerp, smooth, rng, makeTrack, hAt, bathAt, depthAt, groundAt, nextBathDist, zone,
     newRider, stepRider, makeAIRun, aiGas, simRun, shuffle, makeDraw };
 })();
 if (typeof module !== 'undefined') module.exports = MR;
@@ -1917,6 +1923,7 @@ const RN = (function () {
       const e = G.riders[id];
       const r = MR.newRider();
       r.extreme = isExtreme();
+      if (e.isPlayer) r.zw = MR.ZW[G.diff];      // зелёная зона игрока шире на лёгких уровнях; боты — без поправки
       G.lanes[l] = {
         entry: e, r, look: e.look, name: e.name, player: !!e.isPlayer,
         ai: e.isPlayer ? null : MR.makeAIRun(e.skill, G.heatRnd, r.extreme)

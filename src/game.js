@@ -384,6 +384,7 @@
       const e = G.riders[id];
       const r = MR.newRider();
       r.extreme = isExtreme();
+      if (e.isPlayer) r.zw = MR.ZW[G.diff];      // зелёная зона игрока шире на лёгких уровнях; боты — без поправки
       G.lanes[l] = {
         entry: e, r, look: e.look, name: e.name, player: !!e.isPlayer,
         ai: e.isPlayer ? null : MR.makeAIRun(e.skill, G.heatRnd, r.extreme)
