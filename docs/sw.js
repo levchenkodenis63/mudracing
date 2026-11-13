@@ -2,7 +2,7 @@
    Сначала сеть (чтобы сразу получать новые версии), без сети — из кэша.
    Запросы к серверу рекордов (другой домен) не трогаем: ими управляет store.js.
    VERSION подставляет build.py — новая сборка = новый кэш. */
-const VERSION = '69528bbae0';
+const VERSION = '1e0f2d0636';
 const CACHE = 'mudracing-' + VERSION;
 const FILES = ['./', './index.html', './install.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',

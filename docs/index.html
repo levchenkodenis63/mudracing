@@ -1853,8 +1853,13 @@ const RN = (function () {
       <div class="sub">каждый едет 2 раза по дорожке 1 и 2 раза по дорожке 2${G.nRiders % 2 ? ' · в каждой серии кто-то едет без пары' : ''}</div>
       <div class="grid4">${rows}</div>
       <div class="sub small">Ты едешь по одному заезду в каждой серии; остальные пары едут параллельно — их времена засчитываются автоматически.</div>
-      <button class="btn primary" id="btn-go">НА СТАРТ · серия 1</button>
+      <div class="rowbtns">
+        <button class="btn" id="btn-draw-back">НАЗАД</button>
+        <button class="btn primary" id="btn-go">НА СТАРТ · серия 1</button>
+      </div>
     `);
+    // передумал (уровень, число участников) — чемпионат ещё не начат, просто возвращаемся в меню
+    document.getElementById('btn-draw-back').addEventListener('click', () => { hide(); menu(); });
     document.getElementById('btn-go').addEventListener('click', () => {
       if (isExtreme()) questionScreen(() => playSeries(0)); else playSeries(0);
     });
