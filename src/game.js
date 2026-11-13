@@ -40,6 +40,7 @@
   [ped, cv].forEach((el) => {
     el.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
     el.addEventListener('contextmenu', (e) => e.preventDefault());
+    el.addEventListener('dragstart', (e) => e.preventDefault());
   });
   document.addEventListener('selectstart', (e) => { if (!typing(e)) e.preventDefault(); });
 

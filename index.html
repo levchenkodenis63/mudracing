@@ -196,7 +196,9 @@
     align-items:center;justify-content:center;font-weight:900;letter-spacing:2px;font-size:15px;color:#1a0d02;
     background:radial-gradient(circle at 35% 30%,#ffb268,#ff7a1f 60%,#d9540c);
     box-shadow:0 10px 30px rgba(255,122,31,.35),inset 0 2px 0 rgba(255,255,255,.45);z-index:5;touch-action:none;
-    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none}
+  /* надпись — псевдоэлемент: iOS не может её выделить или «поднять» для перетаскивания */
+  #gasped::before{content:"ГАЗ";pointer-events:none}
   #gasped:active{transform:scale(.96)}
   #snd{position:fixed;right:14px;top:14px;z-index:6;width:38px;height:38px;border-radius:10px;border:1px solid rgba(255,255,255,.16);
     background:rgba(12,12,15,.72);color:#fff;font-size:16px;cursor:pointer;display:none}
@@ -228,7 +230,7 @@
 <body>
 <canvas id="game"></canvas>
 <div id="overlay"></div>
-<div id="gasped" class="on">ГАЗ</div>
+<div id="gasped" class="on" role="button" aria-label="Газ" draggable="false"></div>
 <button id="snd" title="Звук">♪</button>
 <script type="application/json" id="mr-questions" data-src="questions.json"></script>
 <script src="src/core.js"></script>
