@@ -36,6 +36,12 @@
   const ped = document.getElementById('gasped');
   ped.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); input.gas = true; });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach((t) => ped.addEventListener(t, () => { input.gas = false; }));
+  // телефон: частые и долгие нажатия не должны выделять текст и открывать меню «Скопировать/Вставить»
+  [ped, cv].forEach((el) => {
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
+    el.addEventListener('contextmenu', (e) => e.preventDefault());
+  });
+  document.addEventListener('selectstart', (e) => { if (!typing(e)) e.preventDefault(); });
 
   /* ---------- данные гонщиков ---------- */
   const LOOKS = [

@@ -14,7 +14,9 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;overflow:hidden;background:#0a0b0e;
     font-family:"Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--txt);
-    user-select:none;overscroll-behavior:none}
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+  /* текст выделяется только в поле имени (Safari на iPhone понимает лишь -webkit-user-select) */
+  input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
   #game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
   #overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
     padding:16px;background:radial-gradient(120% 90% at 50% 0%,rgba(10,11,14,.72),rgba(6,7,9,.93));
@@ -193,7 +195,8 @@
   #gasped{position:fixed;right:18px;bottom:18px;width:104px;height:104px;border-radius:50%;display:none;
     align-items:center;justify-content:center;font-weight:900;letter-spacing:2px;font-size:15px;color:#1a0d02;
     background:radial-gradient(circle at 35% 30%,#ffb268,#ff7a1f 60%,#d9540c);
-    box-shadow:0 10px 30px rgba(255,122,31,.35),inset 0 2px 0 rgba(255,255,255,.45);z-index:5;touch-action:none}
+    box-shadow:0 10px 30px rgba(255,122,31,.35),inset 0 2px 0 rgba(255,255,255,.45);z-index:5;touch-action:none;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   #gasped:active{transform:scale(.96)}
   #snd{position:fixed;right:14px;top:14px;z-index:6;width:38px;height:38px;border-radius:10px;border:1px solid rgba(255,255,255,.16);
     background:rgba(12,12,15,.72);color:#fff;font-size:16px;cursor:pointer;display:none}
